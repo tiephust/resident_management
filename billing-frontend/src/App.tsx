@@ -6,7 +6,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import vi from 'date-fns/locale/vi';
 import theme from './theme';
 import Layout from './components/Layout';
-import Login from './pages/auth/Login';
+import Login from './pages/Login';
 import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
@@ -31,6 +31,21 @@ import ResidentFeedback from './pages/resident/Feedback';
 import ResidentComments from './pages/resident/Comments';
 import ResidentProfile from './pages/resident/Profile';
 import { NotFound, Forbidden, ServerError } from './pages/error';
+import { authService } from './services/authService';
+
+const PrivateRoute: React.FC<{ children: React.ReactNode; role: string }> = ({ children, role }) => {
+  const user = authService.getCurrentUser();
+  
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+
+  if (user.role !== role) {
+    return <Navigate to={user.role === 'ADMIN' ? '/admin/dashboard' : '/resident/dashboard'} />;
+  }
+
+  return <>{children}</>;
+};
 
 const App: React.FC = () => {
   return (
@@ -54,7 +69,14 @@ const App: React.FC = () => {
             </Route>
 
             {/* Resident Routes */}
-            <Route path="/resident/*" element={<ResidentLayout />}>
+            <Route
+              path="/resident/*"
+              element={
+                <PrivateRoute role="RESIDENT">
+                  <ResidentLayout />
+                </PrivateRoute>
+              }
+            >
               <Route path="dashboard" element={<ResidentDashboard />} />
               <Route path="payments" element={<ResidentPayments />} />
               <Route path="absence" element={<ResidentAbsence />} />
@@ -66,7 +88,14 @@ const App: React.FC = () => {
             </Route>
 
             {/* Admin Routes */}
-            <Route path="/admin/*" element={<AdminLayout />}>
+            <Route
+              path="/admin/*"
+              element={
+                <PrivateRoute role="ADMIN">
+                  <AdminLayout />
+                </PrivateRoute>
+              }
+            >
               <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="statistics" element={<Statistics />} />
               <Route path="residents" element={<Residents />} />
@@ -86,7 +115,7 @@ const App: React.FC = () => {
             <Route path="/500" element={<ServerError />} />
             
             {/* Default Route */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/" element={<Navigate to="/login" />} />
             <Route path="*" element={<Navigate to="/404" replace />} />
           </Routes>
         </Router>

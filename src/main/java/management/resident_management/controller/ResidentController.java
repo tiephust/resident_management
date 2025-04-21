@@ -1,13 +1,11 @@
 package management.resident_management.controller;
 
 import management.resident_management.entity.Resident;
-import management.resident_management.repository.ResidentRepository;
+import management.resident_management.service.ResidentService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/residents")
@@ -15,44 +13,40 @@ import java.util.Optional;
 public class ResidentController {
 
     @Autowired
-    private ResidentRepository residentRepository;
+    private ResidentService residentService;
 
     @GetMapping
     public List<Resident> getAllResidents() {
-        return residentRepository.findAll();
+        return residentService.getAllResidents();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Resident> getResidentById(@PathVariable Long id) {
-        Optional<Resident> resident = residentRepository.findById(id);
-        return resident.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public Resident getResidentById(@PathVariable Long id) {
+        return residentService.getResidentById(id);
     }
 
     @PostMapping
     public Resident createResident(@RequestBody Resident resident) {
-        return residentRepository.save(resident);
+        return residentService.createResident(resident);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Resident> updateResident(@PathVariable Long id, @RequestBody Resident residentDetails) {
-        Optional<Resident> residentOptional = residentRepository.findById(id);
-        if (residentOptional.isPresent()) {
-            Resident resident = residentOptional.get();
-            resident.setName(residentDetails.getName());
-            resident.setEmail(residentDetails.getEmail());
-            resident.setPhoneNumber(residentDetails.getPhoneNumber());
-            return ResponseEntity.ok(residentRepository.save(resident));
-        }
-        return ResponseEntity.notFound().build();
+    public Resident updateResident(@PathVariable Long id, @RequestBody Resident resident) {
+        return residentService.updateResident(id, resident);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteResident(@PathVariable Long id) {
-        if (residentRepository.existsById(id)) {
-            residentRepository.deleteById(id);
-            return ResponseEntity.ok().build();
-        }
-        return ResponseEntity.notFound().build();
+    public void deleteResident(@PathVariable Long id) {
+        residentService.deleteResident(id);
+    }
+
+    @GetMapping("/search")
+    public List<Resident> searchResidents(@RequestParam String searchTerm) {
+        return residentService.searchResidents(searchTerm);
+    }
+
+    @GetMapping("/status/{status}")
+    public List<Resident> getResidentsByStatus(@PathVariable String status) {
+        return residentService.getResidentsByStatus(status);
     }
 } 

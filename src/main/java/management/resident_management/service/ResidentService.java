@@ -38,4 +38,44 @@ public class ResidentService {
             }
         }
     }
+
+    public List<Resident> getAllResidents() {
+        return residentRepository.findAll();
+    }
+
+    public Resident getResidentById(Long id) {
+        return residentRepository.findById(id).orElse(null);
+    }
+
+    public Resident createResident(Resident resident) {
+        return residentRepository.save(resident);
+    }
+
+    public Resident updateResident(Long id, Resident resident) {
+        Resident existingResident = residentRepository.findById(id).orElse(null);
+        if (existingResident != null) {
+            existingResident.setName(resident.getName());
+            existingResident.setEmail(resident.getEmail());
+            existingResident.setPhoneNumber(resident.getPhoneNumber());
+            existingResident.setUnitNumber(resident.getUnitNumber());
+            existingResident.setDepartment(resident.getDepartment());
+            existingResident.setLeaseStartDate(resident.getLeaseStartDate());
+            existingResident.setLeaseEndDate(resident.getLeaseEndDate());
+            return residentRepository.save(existingResident);
+        }
+        return null;
+    }
+
+    public void deleteResident(Long id) {
+        residentRepository.deleteById(id);
+    }
+
+    public List<Resident> searchResidents(String searchTerm) {
+        return residentRepository.findByNameContainingOrEmailContainingOrPhoneNumberContaining(
+            searchTerm, searchTerm, searchTerm);
+    }
+
+    public List<Resident> getResidentsByStatus(String status) {
+        return residentRepository.findByStatus(status);
+    }
 }

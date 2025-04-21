@@ -17,6 +17,8 @@ import {
   useTheme,
   Avatar,
   Button,
+  Menu,
+  MenuItem,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -35,6 +37,7 @@ import {
   PersonAdd as PersonAddIcon,
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
+import { authService } from '../services/authService';
 
 const drawerWidth = 280;
 
@@ -44,9 +47,27 @@ const AdminLayout = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
 
   const adminName = "Văn Thanh";
@@ -163,12 +184,24 @@ const AdminLayout = () => {
           </Typography>
           <Box sx={{ width: '200px', display: 'flex', justifyContent: 'flex-end' }}>
             <Button
-              color="error"
-              startIcon={<LogoutIcon />}
-              onClick={() => navigate('/logout')}
+              color="inherit"
+              onClick={handleMenuOpen}
+              startIcon={<Avatar sx={{ width: 24, height: 24 }} />}
             >
-              Đăng xuất
+              {adminName}
             </Button>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleMenuClose}
+            >
+              <MenuItem onClick={handleLogout}>
+                <ListItemIcon>
+                  <LogoutIcon fontSize="small" />
+                </ListItemIcon>
+                Đăng xuất
+              </MenuItem>
+            </Menu>
           </Box>
         </Toolbar>
       </AppBar>

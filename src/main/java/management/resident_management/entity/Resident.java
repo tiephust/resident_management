@@ -34,4 +34,6 @@ public class Resident extends User {
 
 //    @Column(nullable = false)
     private String department;
+
+    private String status;
 }
