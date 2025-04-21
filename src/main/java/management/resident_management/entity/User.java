@@ -14,27 +14,27 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @SuperBuilder
 @Entity
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "user_type", discriminatorType = DiscriminatorType.STRING)
+@Inheritance(strategy = InheritanceType.JOINED)
+@Table(name = "users")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+//    @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false, unique = true)
+//    @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
+//    @Column(nullable = false)
     private String password;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+//    @Column(nullable = false)
     private UserRole role;
 
-    @Column(nullable = false)
+//    @Column(nullable = false)
     private boolean isActive;
 
     @Column(nullable = true)
@@ -49,10 +49,10 @@ public class User {
     @Column(nullable = true)
     private LocalDate leaseEndDate;
 
-    @Column(nullable = false)
+//    @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = false)
+//    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
     @PrePersist
