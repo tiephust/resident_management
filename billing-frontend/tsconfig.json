@@ -18,9 +18,22 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@mui/material/*": ["node_modules/@mui/material/*"],
+      "@mui/icons-material/*": ["node_modules/@mui/icons-material/*"],
+      "@mui/x-date-pickers/*": ["node_modules/@mui/x-date-pickers/*"],
+      "@mui/system/*": ["node_modules/@mui/system/*"],
+      "@emotion/react": ["node_modules/@emotion/react"],
+      "@emotion/styled": ["node_modules/@emotion/styled"],
+      "date-fns/*": ["node_modules/date-fns/*"]
+    }
   },
   "include": [
     "src"
+  ],
+  "exclude": [
+    "node_modules"
   ]
 }

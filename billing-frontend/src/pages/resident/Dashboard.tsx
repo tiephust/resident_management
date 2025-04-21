@@ -11,14 +11,32 @@ import {
   TableHead,
   TableRow,
   Button,
+  List,
+  ListItem,
+  ListItemText,
+  Divider,
 } from '@mui/material';
 import axios from 'axios';
 import { Bill } from '../../types';
+import { useNavigate } from 'react-router-dom';
+import {
+  PersonOff as AbsenceIcon,
+  PersonAdd as TemporaryResidentIcon,
+  Notifications as NotificationsIcon,
+} from '@mui/icons-material';
+
+interface Notification {
+  id: number;
+  title: string;
+  content: string;
+  date: string;
+}
 
 const ResidentDashboard: React.FC = () => {
   const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchBills();
@@ -57,6 +75,23 @@ const ResidentDashboard: React.FC = () => {
     }
   };
 
+  // Mock notifications data
+  const notifications: Notification[] = [
+    {
+      id: 1,
+      title: 'Thông báo đã duyệt phản ánh',
+      content: 'Phản ánh về dịch vụ của bạn đã được duyệt',
+      date: '25/12/2023',
+    },
+    {
+      id: 2,
+      title: 'Thông báo đóng phí',
+      content: 'Đã cập nhật các khoản phí mới vui lòng đóng phí đúng hạn.',
+      date: '25/12/2023',
+    },
+    // Add more notifications as needed
+  ];
+
   if (loading) {
     return <Typography>Loading...</Typography>;
   }
@@ -71,6 +106,89 @@ const ResidentDashboard: React.FC = () => {
         Resident Dashboard
       </Typography>
       
+      {/* Large Action Buttons */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} md={6}>
+          <Paper
+            sx={{
+              p: 2,
+              height: '200px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'transform 0.2s',
+              '&:hover': {
+                transform: 'scale(1.02)',
+              },
+            }}
+            onClick={() => navigate('/resident/absence')}
+          >
+            <AbsenceIcon sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
+            <Typography variant="h5" align="center">
+              Khai báo tạm vắng
+            </Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Paper
+            sx={{
+              p: 2,
+              height: '200px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'transform 0.2s',
+              '&:hover': {
+                transform: 'scale(1.02)',
+              },
+            }}
+            onClick={() => navigate('/resident/temporary')}
+          >
+            <TemporaryResidentIcon sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
+            <Typography variant="h5" align="center">
+              Khai báo tạm trú
+            </Typography>
+          </Paper>
+        </Grid>
+      </Grid>
+
+      {/* Notifications Section */}
+      <Paper sx={{ mt: 3 }}>
+        <Box sx={{ p: 2, display: 'flex', alignItems: 'center' }}>
+          <NotificationsIcon sx={{ mr: 1 }} />
+          <Typography variant="h6">
+            Thông báo
+          </Typography>
+        </Box>
+        <Divider />
+        <List>
+          {notifications.map((notification) => (
+            <React.Fragment key={notification.id}>
+              <ListItem sx={{ px: 2, py: 1.5 }}>
+                <ListItemText
+                  primary={
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 'medium' }}>
+                        {notification.title}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {notification.date}
+                      </Typography>
+                    </Box>
+                  }
+                  secondary={notification.content}
+                />
+              </ListItem>
+              <Divider />
+            </React.Fragment>
+          ))}
+        </List>
+      </Paper>
+
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 2 }}>

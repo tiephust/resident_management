@@ -10,32 +10,44 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useNotification } from '../../services/notification.service';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { showSuccess, showError } = useNotification();
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    
+    if (!validateEmail(email)) {
+      showError('Please enter a valid email address');
+      return;
+    }
+
     setLoading(true);
 
     try {
       const response = await axios.post('/api/auth/login', {
-        email,
+        email: email.toLowerCase(), // Convert to lowercase
         password,
       });
 
       // Store the token in localStorage
       localStorage.setItem('token', response.data.token);
       
+      showSuccess('Login successful!');
       // Redirect to dashboard
       navigate('/dashboard');
     } catch (err) {
-      setError('Invalid email or password');
+      showError('Invalid email or password');
     } finally {
       setLoading(false);
     }
@@ -55,11 +67,6 @@ const Login: React.FC = () => {
           Sign in
         </Typography>
         <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
           <TextField
             margin="normal"
             required
@@ -71,6 +78,8 @@ const Login: React.FC = () => {
             autoFocus
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            error={email !== '' && !validateEmail(email)}
+            helperText={email !== '' && !validateEmail(email) ? 'Please enter a valid email address' : ''}
           />
           <TextField
             margin="normal"

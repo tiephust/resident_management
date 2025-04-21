@@ -13,16 +13,19 @@ import {
   DialogContent,
   DialogActions,
   Typography,
+  Box,
 } from '@mui/material';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import axios from 'axios';
 import { Bill, PaymentIntentResponse } from '../types';
 import PaymentForm from '../components/PaymentForm';
+import PageTemplate from '../components/PageTemplate';
+import { Add as AddIcon } from '@mui/icons-material';
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY || '');
 
-const Bills = () => {
+const Bills: React.FC = () => {
   const [bills, setBills] = useState<Bill[]>([]);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [paymentIntent, setPaymentIntent] = useState<PaymentIntentResponse | null>(null);
@@ -59,38 +62,42 @@ const Bills = () => {
   };
 
   return (
-    <div>
-      <Typography variant="h4" gutterBottom>
-        Bills
-      </Typography>
+    <PageTemplate title="Bills Management">
+      <Box sx={{ mb: 3 }}>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => {/* Handle add new bill */}}
+        >
+          Add New Bill
+        </Button>
+      </Box>
+
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
               <TableCell>Description</TableCell>
-              <TableCell>Amount</TableCell>
-              <TableCell>Status</TableCell>
+              <TableCell align="right">Amount</TableCell>
               <TableCell>Due Date</TableCell>
-              <TableCell>Actions</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {bills.map((bill) => (
               <TableRow key={bill.id}>
                 <TableCell>{bill.description}</TableCell>
-                <TableCell>${bill.amount.toFixed(2)}</TableCell>
-                <TableCell>{bill.status}</TableCell>
+                <TableCell align="right">${bill.amount.toFixed(2)}</TableCell>
                 <TableCell>{new Date(bill.dueDate).toLocaleDateString()}</TableCell>
-                <TableCell>
-                  {bill.status === 'PENDING' && (
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      onClick={() => handlePayClick(bill)}
-                    >
-                      Pay
-                    </Button>
-                  )}
+                <TableCell>{bill.status}</TableCell>
+                <TableCell align="right">
+                  <Button size="small" onClick={() => {/* Handle edit */}}>
+                    Edit
+                  </Button>
+                  <Button size="small" color="error" onClick={() => {/* Handle delete */}}>
+                    Delete
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -118,7 +125,7 @@ const Bills = () => {
           <Button onClick={handleClose}>Cancel</Button>
         </DialogActions>
       </Dialog>
-    </div>
+    </PageTemplate>
   );
 };
 

@@ -6,23 +6,27 @@ import {
   TextField,
   Button,
   Link,
-  Alert,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useNotification } from '../../services/notification.service';
 
 const Register: React.FC = () => {
   const [formData, setFormData] = useState({
-    name: '',
     email: '',
     password: '',
     confirmPassword: '',
     phoneNumber: '',
     unitNumber: '',
   });
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { showSuccess, showError } = useNotification();
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -34,10 +38,14 @@ const Register: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+
+    if (!validateEmail(formData.email)) {
+      showError('Please enter a valid email address');
+      return;
+    }
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      showError('Passwords do not match');
       return;
     }
 
@@ -45,17 +53,16 @@ const Register: React.FC = () => {
 
     try {
       await axios.post('/api/auth/register', {
-        name: formData.name,
-        email: formData.email,
+        email: formData.email.toLowerCase(), // Convert to lowercase
         password: formData.password,
         phoneNumber: formData.phoneNumber,
         unitNumber: formData.unitNumber,
       });
 
-      // Redirect to login page
+      showSuccess('Registration successful! Please login with your credentials.');
       navigate('/login');
     } catch (err) {
-      setError('Registration failed. Please try again.');
+      showError('Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -75,23 +82,6 @@ const Register: React.FC = () => {
           Sign up
         </Typography>
         <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="name"
-            label="Full Name"
-            name="name"
-            autoComplete="name"
-            autoFocus
-            value={formData.name}
-            onChange={handleChange}
-          />
           <TextField
             margin="normal"
             required
@@ -100,8 +90,11 @@ const Register: React.FC = () => {
             label="Email Address"
             name="email"
             autoComplete="email"
+            autoFocus
             value={formData.email}
             onChange={handleChange}
+            error={formData.email !== '' && !validateEmail(formData.email)}
+            helperText={formData.email !== '' && !validateEmail(formData.email) ? 'Please enter a valid email address' : ''}
           />
           <TextField
             margin="normal"
