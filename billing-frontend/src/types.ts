@@ -1,20 +1,30 @@
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  password?: string;
+  role: UserRole;
+  isActive: boolean;
+  phoneNumber?: string;
+  unitNumber?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Resident extends User {
+  leaseStartDate: string;
+  leaseEndDate: string;
+  stripeCustomerId?: string;
+}
+
+export interface Admin extends User {
+  department: string;
+}
+
 export interface PaymentIntentResponse {
   client_secret: string;
   id: string;
   status: string;
-}
-
-export interface Resident {
-  id: string;
-  name: string;
-  email: string;
-  phoneNumber: string;
-  unitNumber: string;
-  leaseStartDate: string;
-  leaseEndDate: string;
-  stripeCustomerId?: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface Bill {
@@ -28,4 +38,10 @@ export interface Bill {
   stripePaymentId?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export enum UserRole {
+  RESIDENT = 'RESIDENT',
+  ADMIN = 'ADMIN',
+  MANAGEMENT = 'MANAGEMENT'
 } 

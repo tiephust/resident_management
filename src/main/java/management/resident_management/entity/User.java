@@ -1,51 +1,68 @@
 package management.resident_management.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
+@SuperBuilder
 @Entity
-@Inheritance(strategy = InheritanceType.JOINED)
-@Table(name = "users")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "user_type", discriminatorType = DiscriminatorType.STRING)
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String username;
-
-    private String password;
-
-    @Enumerated(EnumType.STRING) // This is the critical annotation
     @Column(nullable = false)
-    private Role role;
+    private String name;
 
+    @Column(nullable = false, unique = true)
     private String email;
 
-    private String phone;
+    @Column(nullable = false)
+    private String password;
 
-    private LocalDateTime createAt;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserRole role;
 
-    private String refreshToken;
+    @Column(nullable = false)
+    private boolean isActive;
 
-    public enum Role {
-        ADMIN,
-        USER;
+    @Column(nullable = true)
+    private String phoneNumber;
 
-        public static Role fromString(String role) {
-            return switch (role) {
-                case "ADMIN" -> ADMIN;
-                case "USER" -> USER;
-                default -> throw new IllegalStateException("Unexpected value: " + role);
-            };
-        }
+    @Column(nullable = true)
+    private String unitNumber;
+
+    @Column(nullable = true)
+    private LocalDate leaseStartDate;
+
+    @Column(nullable = true)
+    private LocalDate leaseEndDate;
+
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }
