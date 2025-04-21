@@ -1,58 +1,29 @@
-package management.residentmanagement.entity;
+package management.resident_management.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import lombok.Data;
 import java.util.List;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
-//@PrimaryKeyJoinColumn(name = "id")
-//@Table(name = "resident")
-public class Resident extends User{
-//    @Id
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
-//    private Long id;
+@Data
+@Table(name = "residents")
+public class Resident {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
+    @Column(nullable = false)
     private String name;
 
-    private String Identifier; // CMND/CCCD
+    @Column(nullable = false, unique = true)
+    private String email;
 
-    private String sex;
+    @Column
+    private String phoneNumber;
 
-    private LocalDate dateOfBirth;
+    @Column
+    private String stripeCustomerId;
 
-    private String job;
-
-    private String address;
-
-    private LocalDateTime creatAt;
-
-    private LocalDateTime updateAt;
-
-    private LocalDateTime deleteAt;
-
-    private Long userId;
-
-    private Status status;
-
-
-    @OneToMany(mappedBy = "resident", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<DeclarationForm> declarationForms;
-
-    public enum Status {
-        CREATED,
-        UPDATED,
-//        ACTIVE,
-//        INACTIVE,
-        DELETED;
-    }
+    @OneToMany(mappedBy = "resident", cascade = CascadeType.ALL)
+    private List<Bill> bills;
 }
