@@ -1,8 +1,13 @@
-const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+import path from 'path';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import { CleanWebpackPlugin } from 'clean-webpack-plugin';
+import Dotenv from 'dotenv-webpack';
+import { fileURLToPath } from 'url';
 
-module.exports = {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export default {
   entry: './src/index.tsx',
   output: {
     path: path.resolve(__dirname, 'build'),
@@ -12,10 +17,10 @@ module.exports = {
   resolve: {
     extensions: ['.tsx', '.ts', '.js', '.jsx'],
     fallback: {
-      "path": require.resolve("path-browserify"),
-      "crypto": require.resolve("crypto-browserify"),
-      "stream": require.resolve("stream-browserify"),
-      "buffer": require.resolve("buffer/")
+      "path": "path-browserify",
+      "crypto": "crypto-browserify",
+      "stream": "stream-browserify",
+      "buffer": "buffer/"
     }
   },
   module: {
@@ -23,7 +28,25 @@ module.exports = {
       {
         test: /\.(ts|tsx)$/,
         exclude: /node_modules/,
-        use: ['babel-loader']
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: [
+              ['@babel/preset-env', { 
+                targets: { node: 'current' },
+                modules: 'auto'
+              }],
+              '@babel/preset-react',
+              '@babel/preset-typescript'
+            ],
+            plugins: [
+              ['@babel/plugin-transform-runtime', {
+                regenerator: true,
+                useESModules: true
+              }]
+            ]
+          }
+        }
       },
       {
         test: /\.css$/,
@@ -40,6 +63,13 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: './public/index.html',
       favicon: './public/favicon.ico'
+    }),
+    new Dotenv({
+      path: './.env',
+      safe: true,
+      systemvars: true,
+      silent: true,
+      defaults: false
     })
   ],
   optimization: {
