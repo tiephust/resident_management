@@ -1,45 +1,56 @@
 import React, { useState } from 'react';
 import {
-  Box,
   Container,
-  Paper,
+  Box,
   Typography,
   TextField,
   Button,
+  Link,
   Alert,
-  CircularProgress
+  CircularProgress,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { authService, LoginCredentials } from '../services/authService';
+import authService from '../services/authService';
+import { useNotification } from '../services/notification.service';
 
 const Login: React.FC = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const [error, setError] = useState<string | null>(null);
-  const [credentials, setCredentials] = useState<LoginCredentials>({
-    email: '',
-    password: '',
-  });
-  const [loading, setLoading] = useState<boolean>(false);
+  const { showSuccess, showError } = useNotification();
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    
+    if (!validateEmail(email)) {
+      showError('Vui lòng nhập địa chỉ email hợp lệ');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const response = await authService.login(credentials);
-      localStorage.setItem('user', JSON.stringify(response.user));
-      localStorage.setItem('token', response.token);
-
+      // Login and get user info
+      const loginResponse = await authService.login(email.toLowerCase(), password);
+      console.log('Login successful, user info:', loginResponse.userRole);
+      
+      showSuccess('Đăng nhập thành công');
+      
       // Redirect based on role
-      if (response.user.role === 'ADMIN') {
+      if (loginResponse.userRole === 'ADMIN') {
         navigate('/admin/dashboard');
-      } else if (response.user.role === 'RESIDENT') {
+      } else if (loginResponse.userRole === 'RESIDENT') {
         navigate('/resident/dashboard');
       }
     } catch (err) {
-      console.error('Login error:', err); // Debug log
-      setError('Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.');
+      console.error('Login error:', err);
+      showError('Email hoặc mật khẩu không đúng');
     } finally {
       setLoading(false);
     }
@@ -55,62 +66,65 @@ const Login: React.FC = () => {
           alignItems: 'center',
         }}
       >
-        <Paper
-          elevation={3}
-          sx={{
-            padding: 4,
+        <Typography component="h1" variant="h5">
+          Đăng nhập
+        </Typography>
+        <Box 
+          component="form" 
+          onSubmit={handleSubmit} 
+          sx={{ 
+            mt: 1,
+            width: '100%',
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center',
-            width: '100%',
+            gap: 2
           }}
         >
-          <Typography component="h1" variant="h5">
-            Đăng nhập
-          </Typography>
-          
-          {error && (
-            <Alert severity="error" sx={{ mt: 2, width: '100%' }}>
-              {error}
-            </Alert>
-          )}
-
-          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1, width: '100%' }}>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="email"
-              label="Email"
-              name="email"
-              autoComplete="email"
-              autoFocus
-              value={credentials.email}
-              onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
-            />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Mật khẩu"
-              type="password"
-              id="password"
-              autoComplete="current-password"
-              value={credentials.password}
-              onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-            />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-              disabled={loading}
-            >
-              {loading ? <CircularProgress size={24} /> : 'Đăng nhập'}
-            </Button>
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="email"
+            label="Địa chỉ email"
+            name="email"
+            autoComplete="email"
+            autoFocus
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            error={email !== '' && !validateEmail(email)}
+            helperText={email !== '' && !validateEmail(email) ? 'Vui lòng nhập địa chỉ email hợp lệ' : ''}
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            name="password"
+            label="Mật khẩu"
+            type="password"
+            id="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            sx={{ mt: 3, mb: 2 }}
+            disabled={loading}
+          >
+            {loading ? <CircularProgress size={24} /> : 'Đăng nhập'}
+          </Button>
+          <Box sx={{ textAlign: 'center' }}>
+            <Link href="/forgot-password" variant="body2">
+              Quên mật khẩu?
+            </Link>
+            <Typography variant="body2" sx={{ mt: 1 }}>
+              Chưa có tài khoản?{' '}
+              <Link href="/register">Đăng ký</Link>
+            </Typography>
           </Box>
-        </Paper>
+        </Box>
       </Box>
     </Container>
   );

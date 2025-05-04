@@ -27,6 +27,7 @@ import {
   Comment as CommentIcon,
   Logout as LogoutIcon,
 } from '@mui/icons-material';
+import authService from '../services/authService';
 
 const drawerWidth = 280;
 
@@ -55,6 +56,11 @@ const ResidentLayout = () => {
 
   const handleProfileClick = () => {
     navigate('/resident/profile');
+  };
+
+  const handleLogout = () => {
+    authService.logout();
+    navigate('/login');
   };
 
   const drawer = (
@@ -153,7 +159,7 @@ const ResidentLayout = () => {
             <Button
               color="error"
               startIcon={<LogoutIcon />}
-              onClick={() => navigate('/logout')}
+              onClick={handleLogout}
             >
               Đăng xuất
             </Button>

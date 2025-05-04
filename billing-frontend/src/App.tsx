@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import vi from 'date-fns/locale/vi';
 import theme from './theme';
+import { NotificationProvider } from './services/notification.service';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Register from './pages/auth/Register';
@@ -26,22 +27,35 @@ import Profile from './pages/admin/Profile';
 import ResidentDashboard from './pages/resident/Dashboard';
 import ResidentPayments from './pages/resident/Payments';
 import ResidentAbsence from './pages/resident/Absence';
-import ResidentTemporary from './pages/admin/ResidentTemporary';
+import ResidentTemporary from './pages/resident/Temporary';
 import ResidentFeedback from './pages/resident/Feedback';
 import ResidentComments from './pages/resident/Comments';
 import ResidentProfile from './pages/resident/Profile';
 import { NotFound, Forbidden, ServerError } from './pages/error';
-import { authService } from './services/authService';
+import authService from './services/authService';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode; role: string }> = ({ children, role }) => {
-  const user = authService.getCurrentUser();
-  
+  const [user, setUser] = useState<null | { role: string }>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const currentUser = await authService.getCurrentUser();
+      setUser(currentUser);
+      setLoading(false);
+    };
+
+    fetchUser();
+  }, []);
+
+  if (loading) return <div>Đang kiểm tra quyền truy cập...</div>;
+
   if (!user) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
 
   if (user.role !== role) {
-    return <Navigate to={user.role === 'ADMIN' ? '/admin/dashboard' : '/resident/dashboard'} />;
+    return <Navigate to={user.role === 'ADMIN' ? '/admin/dashboard' : '/resident/dashboard'} replace />;
   }
 
   return <>{children}</>;
@@ -51,74 +65,63 @@ const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={vi}>
-        <CssBaseline />
-        <Router>
-          <Routes>
-            {/* Auth Routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
+        <NotificationProvider>
+          <CssBaseline />
+          <Router>
+            <Routes>
+              {/* Auth Routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
 
-            {/* Main App Routes */}
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="bills" element={<Bills />} />
-              <Route path="residents" element={<Residents />} />
-              <Route path="payments" element={<Payments />} />
-            </Route>
+              {/* Main App Routes */}
+              <Route path="/" element={<Layout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="bills" element={<Bills />} />
+                <Route path="residents" element={<Residents />} />
+                <Route path="payments" element={<Payments />} />
+              </Route>
 
-            {/* Resident Routes */}
-            <Route
-              path="/resident/*"
-              element={
-                <PrivateRoute role="RESIDENT">
+              {/* Resident Routes */}
+              <Route path="/resident" element={
+                // <PrivateRoute role="RESIDENT">
                   <ResidentLayout />
-                </PrivateRoute>
-              }
-            >
-              <Route path="dashboard" element={<ResidentDashboard />} />
-              <Route path="payments" element={<ResidentPayments />} />
-              <Route path="absence" element={<ResidentAbsence />} />
-              <Route path="temporary" element={<ResidentTemporary />} />
-              <Route path="feedback" element={<ResidentFeedback />} />
-              <Route path="comments" element={<ResidentComments />} />
-              <Route path="profile" element={<ResidentProfile />} />
-              <Route path="*" element={<Navigate to="/resident/dashboard" replace />} />
-            </Route>
+                // </PrivateRoute>
+              }>
+                <Route path="dashboard" element={<ResidentDashboard />} />
+                <Route path="payments" element={<ResidentPayments />} />
+                <Route path="absence" element={<ResidentAbsence />} />
+                <Route path="temporary" element={<ResidentTemporary />} />
+                <Route path="feedback" element={<ResidentFeedback />} />
+                <Route path="comments" element={<ResidentComments />} />
+                <Route path="profile" element={<ResidentProfile />} />
+              </Route>
 
-            {/* Admin Routes */}
-            <Route
-              path="/admin/*"
-              element={
-                <PrivateRoute role="ADMIN">
+              {/* Admin Routes */}
+              <Route path="/admin" element={
+                // <PrivateRoute role="ADMIN">
                   <AdminLayout />
-                </PrivateRoute>
-              }
-            >
-              <Route path="dashboard" element={<AdminDashboard />} />
-              <Route path="statistics" element={<Statistics />} />
-              <Route path="residents" element={<Residents />} />
-              <Route path="payments" element={<Payments />} />
-              <Route path="temporary-management" element={<TemporaryManagement />} />
-              <Route path="apartment-details" element={<ApartmentDetailsManagement />} />
-              <Route path="fee-types" element={<FeeManagementPage />} />
-              <Route path="devices" element={<DeviceManagement />} />
-              <Route path="profile" element={<Profile />} />
-              <Route path="temporary-residents" element={<ResidentTemporary />} />
-              <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
-            </Route>
+                // </PrivateRoute>
+              }>
+                <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="statistics" element={<Statistics />} />
+                <Route path="residents" element={<Residents />} />
+                <Route path="payments" element={<Payments />} />
+                <Route path="temporary-management" element={<TemporaryManagement />} />
+                <Route path="apartment-details" element={<ApartmentDetailsManagement />} />
+                <Route path="fee-types" element={<FeeManagementPage />} />
+                <Route path="devices" element={<DeviceManagement />} />
+                <Route path="profile" element={<Profile />} />
+              </Route>
 
-            {/* Error Routes */}
-            <Route path="/404" element={<NotFound />} />
-            <Route path="/403" element={<Forbidden />} />
-            <Route path="/500" element={<ServerError />} />
-            
-            {/* Default Route */}
-            <Route path="/" element={<Navigate to="/login" />} />
-            <Route path="*" element={<Navigate to="/404" replace />} />
-          </Routes>
-        </Router>
+              {/* Error Routes */}
+              <Route path="/error/403" element={<Forbidden />} />
+              <Route path="/error/500" element={<ServerError />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Router>
+        </NotificationProvider>
       </LocalizationProvider>
     </ThemeProvider>
   );

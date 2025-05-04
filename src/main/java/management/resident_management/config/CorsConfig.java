@@ -14,11 +14,26 @@ public class CorsConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         
-        // Allow all origins, methods, and headers in development
-        config.addAllowedOrigin("http://localhost:3000"); // React default port
-        config.addAllowedMethod("*");
-        config.addAllowedHeader("*");
+        // Allow specific origins
+        config.addAllowedOrigin("http://localhost:3000");
+        
+        // Allow specific methods
+        config.addAllowedMethod("GET");
+        config.addAllowedMethod("POST");
+        config.addAllowedMethod("PUT");
+        config.addAllowedMethod("DELETE");
+        config.addAllowedMethod("OPTIONS");
+        config.addAllowedMethod("PATCH");
+        
+        // Allow specific headers
+        config.addAllowedHeader("Authorization");
+        config.addAllowedHeader("Content-Type");
+        config.addAllowedHeader("Accept");
+        config.addAllowedHeader("Origin");
+        config.addAllowedHeader("X-Requested-With");
+        
         config.setAllowCredentials(true);
+        config.setMaxAge(3600L); // Cache preflight requests for 1 hour
         
         source.registerCorsConfiguration("/**", config);
         return new CorsFilter(source);

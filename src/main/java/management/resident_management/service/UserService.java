@@ -48,4 +48,9 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(passwordChangeDto.getNewPassword()));
         userRepository.save(user);
     }
+
+    @Transactional
+    public User getUserByEmail(String email){
+        return userRepository.findByEmail(email).orElseThrow();
+    }
 } 

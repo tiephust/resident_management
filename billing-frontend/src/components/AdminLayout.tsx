@@ -37,7 +37,7 @@ import {
   PersonAdd as PersonAddIcon,
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
-import { authService } from '../services/authService';
+import authService from '../services/authService';
 
 const drawerWidth = 280;
 

@@ -1,4 +1,4 @@
-//package management.resident_management.config;
+    //package management.resident_management.config;
 //
 //import management.resident_management.entity.Admin;
 //import management.resident_management.entity.Resident;

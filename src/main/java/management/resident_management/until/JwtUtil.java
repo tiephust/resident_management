@@ -5,9 +5,11 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import management.resident_management.dto.TokenResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.security.Key;
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
@@ -16,13 +18,17 @@ import java.util.Map;
 @Component
 public class JwtUtil {
 
-    private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-    private final long accessTokenExpiration = 3600000; // 1 giờ cho AccessToken
-    private final long refreshTokenExpiration = 86400000; // 1 ngày cho RefreshToken
+    private final SecretKey key;
+    private final long accessTokenExpiration = 3600000; // 1 hour
+    private final long refreshTokenExpiration = 86400000; // 24 hours
+
+    public JwtUtil(@Value("${jwt.secret}") String secret) {
+        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    }
 
     public TokenResponse generateToken(Long id, String email, String password, LocalDateTime createdAt) {
-        String accessToken = generateAccessToken(id, generateRefreshToken(id, email, password, createdAt));
         String refreshToken = generateRefreshToken(id, email, password, createdAt);
+        String accessToken = generateAccessToken(id, refreshToken);
         return new TokenResponse(accessToken, refreshToken);
     }
 
@@ -32,16 +38,15 @@ public class JwtUtil {
         String email = claims.get("email", String.class);
         String password = claims.get("password", String.class);
         LocalDateTime createdAt = LocalDateTime.parse(claims.get("createdAt", String.class));
-        String accessToken = generateAccessToken(id, refreshToken);
-        return new TokenResponse(accessToken, refreshToken);
+        String newAccessToken = generateAccessToken(id, refreshToken);
+        return new TokenResponse(newAccessToken, refreshToken);
     }
 
-    // Tạo RefreshToken với id và thông tin cần thiết
     public String generateRefreshToken(Long id, String email, String password, LocalDateTime createdAt) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("id", id);
         claims.put("email", email);
-        claims.put("password", password); // Nên lưu password đã được hash
+        claims.put("password", password);
         claims.put("createdAt", createdAt.toString());
 
         return Jwts.builder()
@@ -52,11 +57,10 @@ public class JwtUtil {
                 .compact();
     }
 
-    // Tạo AccessToken chỉ dựa trên id và RefreshToken
     public String generateAccessToken(Long id, String refreshToken) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("id", id);
-        claims.put("refreshToken", refreshToken); // Liên kết với RefreshToken
+        claims.put("refreshToken", refreshToken);
 
         return Jwts.builder()
                 .setClaims(claims)
@@ -66,32 +70,30 @@ public class JwtUtil {
                 .compact();
     }
 
-    // Kiểm tra AccessToken có hợp lệ không (dựa trên id và RefreshToken)
-    public boolean isAccessTokenValid(String accessToken, Long id, String refreshToken) {
+    public boolean isAccessTokenValid(String accessToken) {
         try {
             Claims claims = extractAllClaims(accessToken);
-            return claims.get("id").equals(id)
-                    && claims.get("refreshToken").equals(refreshToken)
+            return claims.containsKey("id") 
+                    && claims.containsKey("refreshToken")
                     && !isTokenExpired(claims);
         } catch (Exception e) {
             return false;
         }
     }
 
-    // Kiểm tra RefreshToken có hợp lệ không
-    public boolean isRefreshTokenValid(String refreshToken, Long id, String email, String password) {
+    public boolean isRefreshTokenValid(String refreshToken) {
         try {
             Claims claims = extractAllClaims(refreshToken);
-            return claims.get("id").equals(id)
-                    && claims.get("email").equals(email)
-                    && claims.get("password").equals(password)
+            return claims.containsKey("id")
+                    && claims.containsKey("email")
+                    && claims.containsKey("password")
+                    && claims.containsKey("createdAt")
                     && !isTokenExpired(claims);
         } catch (Exception e) {
             return false;
         }
     }
 
-    // Trích xuất tất cả claims từ token
     private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)
@@ -100,17 +102,14 @@ public class JwtUtil {
                 .getBody();
     }
 
-    // Kiểm tra token đã hết hạn chưa
     private boolean isTokenExpired(Claims claims) {
         return claims.getExpiration().before(new Date());
     }
 
-    // Lấy id từ AccessToken
     public Long getIdFromAccessToken(String accessToken) {
         return extractAllClaims(accessToken).get("id", Long.class);
     }
 
-    // Lấy RefreshToken từ AccessToken
     public String getRefreshTokenFromAccessToken(String accessToken) {
         return extractAllClaims(accessToken).get("refreshToken", String.class);
     }
