@@ -17,20 +17,18 @@ import java.time.LocalDate;
 @Table(name = "residents")
 @PrimaryKeyJoinColumn(name = "user_id")
 public class Resident extends User {
-//    @Column(nullable = false)
-    private String unitNumber;
-
-//    @Column(nullable = false)
-    private LocalDate leaseStartDate;
-
-//    @Column(nullable = false)
-    private LocalDate leaseEndDate;
 
     @Column(nullable = true)
     private String stripeCustomerId;
 
     @OneToMany(mappedBy = "resident")
     private List<Bill> bills;
+
+    @Column(nullable = true)
+    private LocalDate leaseStartDate;
+
+    @Column(nullable = true)
+    private LocalDate leaseEndDate;
 
 //    @Column(nullable = false)
     private String department;

@@ -1,8 +1,10 @@
 package management.resident_management.service;
 
+import jakarta.servlet.http.Cookie;
 import management.resident_management.dto.LoginRequest;
 import management.resident_management.dto.LoginResponse;
 import management.resident_management.dto.RegisterDto;
+import management.resident_management.dto.TokenResponse;
 import management.resident_management.entity.Admin;
 import management.resident_management.entity.Resident;
 import management.resident_management.entity.User;
@@ -10,6 +12,7 @@ import management.resident_management.entity.UserRole;
 import management.resident_management.repository.ResidentRepository;
 import management.resident_management.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import management.resident_management.until.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -29,38 +34,37 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-    private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final CustomUserDetailsService userDetailsService;
+    private final JwtUtil jwtUtil;
 
-    public Map<String, Object> authenticateUser(String email, String password) {
-        Map<String, Object> response = new HashMap<>();
-        
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+//    public Map<String, Object> authenticateUser(String email, String password) {
+//        Map<String, Object> response = new HashMap<>();
+//
+//        User user = userRepository.findByEmail(email)
+//                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+//
+//        if (!passwordEncoder.matches(password, user.getPassword())) {
+//            throw new RuntimeException("Invalid password");
+//        }
+//
+//        // Add user information to response
+//        response.put("id", user.getId());
+//        response.put("email", user.getEmail());
+//        response.put("name", user.getName());
+//        response.put("role", user.getRole());
+//
+//        // Add redirect path based on role
+//        if (user.getRole().equals("ADMIN")) {
+//            response.put("redirectPath", "/admin/dashboard");
+//        } else if (user.getRole().equals("RESIDENT")) {
+//            response.put("redirectPath", "/resident/dashboard");
+//        }
+//
+//        return response;
+//    }
 
-        if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new RuntimeException("Invalid password");
-        }
-
-        // Add user information to response
-        response.put("id", user.getId());
-        response.put("email", user.getEmail());
-        response.put("name", user.getName());
-        response.put("role", user.getRole());
-
-        // Add redirect path based on role
-        if (user.getRole().equals("ADMIN")) {
-            response.put("redirectPath", "/admin/dashboard");
-        } else if (user.getRole().equals("RESIDENT")) {
-            response.put("redirectPath", "/resident/dashboard");
-        }
-
-        return response;
-    }
-
-    public LoginResponse login(LoginRequest loginRequest) {
+    public LoginResponse login(LoginRequest loginRequest, HttpServletResponse response) {
         Optional<User> userOptional = userRepository.findByEmail(loginRequest.getEmail());
         
         if (userOptional.isEmpty()) {
@@ -73,18 +77,26 @@ public class AuthService {
             throw new RuntimeException("Mật khẩu không đúng");
         }
 
-        // Tạo token đơn giản (trong thực tế nên sử dụng JWT)
-        String token = "dummy-token-" + user.getId();
+        TokenResponse tokenResponse = jwtUtil.generateToken(user.getId(), user.getEmail(), user.getPassword(), user.getCreatedAt());
 
-        return LoginResponse.builder()
-                .token(token)
-                .user(LoginResponse.UserInfo.builder()
-                        .id(user.getId())
-                        .name(user.getName())
-                        .email(user.getEmail())
-                        .role(user.getRole().name())
-                        .build())
-                .build();
+        String accessToken = tokenResponse.getAccessToken();
+        String refreshToken = tokenResponse.getRefreshToken();
+        // Set HTTP-only cookies
+        Cookie accessTokenCookie = new Cookie("accessToken", accessToken);
+        accessTokenCookie.setHttpOnly(true);
+        accessTokenCookie.setSecure(true); // Chỉ dùng HTTPS
+        accessTokenCookie.setPath("/");
+        accessTokenCookie.setMaxAge(3600); // 1 gio
+        response.addCookie(accessTokenCookie);
+
+        Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
+        refreshTokenCookie.setHttpOnly(true);
+        refreshTokenCookie.setSecure(true);
+        refreshTokenCookie.setPath("/");
+        refreshTokenCookie.setMaxAge(86400); // 1 ngày
+        response.addCookie(refreshTokenCookie);
+
+        return new LoginResponse(tokenResponse, user.getRole().toString());
     }
 
     @Transactional
@@ -123,12 +135,13 @@ public class AuthService {
         response.setHeader("Expires", "0");
     }
 
-    public User getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new RuntimeException("User not authenticated");
-        }
-        return userRepository.findByEmail(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public Optional<User> getCurrentUser(String token) {
+        return userRepository.findById(jwtUtil.getIdFromAccessToken(token));
     }
-} 
+
+
+    public TokenResponse refreshToken(String refreshToken) {
+        return jwtUtil.generateToken(refreshToken);
+    }
+
+}
