@@ -18,21 +18,18 @@ public class CorsConfig {
         config.addAllowedOrigin("http://localhost:3000");
         
         // Allow specific methods
-        config.addAllowedMethod("GET");
-        config.addAllowedMethod("POST");
-        config.addAllowedMethod("PUT");
-        config.addAllowedMethod("DELETE");
-        config.addAllowedMethod("OPTIONS");
-        config.addAllowedMethod("PATCH");
+        config.addAllowedMethod("*");
         
         // Allow specific headers
-        config.addAllowedHeader("Authorization");
-        config.addAllowedHeader("Content-Type");
-        config.addAllowedHeader("Accept");
-        config.addAllowedHeader("Origin");
-        config.addAllowedHeader("X-Requested-With");
-        
+        config.addAllowedHeader("*");
+
+        // Allow credentials (cookies, authorization headers, etc)
         config.setAllowCredentials(true);
+
+        // Expose headers that the frontend needs to read
+        config.addExposedHeader("Authorization");
+        config.addExposedHeader("Set-Cookie");
+
         config.setMaxAge(3600L); // Cache preflight requests for 1 hour
         
         source.registerCorsConfiguration("/**", config);

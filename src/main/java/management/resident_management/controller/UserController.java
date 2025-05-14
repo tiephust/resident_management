@@ -7,6 +7,7 @@ import management.resident_management.entity.User;
 import management.resident_management.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,8 +23,10 @@ public class UserController {
     @GetMapping("/me")
     public ResponseEntity<UserInfoDto> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         String email = authentication.getName();
-
         UserInfoDto userInfo = UserInfoDto.toUserInforDto(userService.getUserByEmail(email));
         return ResponseEntity.ok(userInfo);
     }
@@ -31,11 +34,13 @@ public class UserController {
     @PutMapping("/me")
     public ResponseEntity<User> updateUser(@Valid @RequestBody UserUpdateDto userUpdateDto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         String email = authentication.getName();
         User user = userService.getUserByEmail(email);
         return ResponseEntity.ok(userService.updateUser(user.getId(), userUpdateDto));
     }
-
 
     @PutMapping("/me/password")
     public ResponseEntity<Void> changePassword(
@@ -44,4 +49,4 @@ public class UserController {
         userService.changePassword(user.getId(), passwordChangeDto);
         return ResponseEntity.ok().build();
     }
-} 
+}

@@ -2,6 +2,8 @@ package management.resident_management.config;
 
 import lombok.RequiredArgsConstructor;
 import management.resident_management.security.JwtAuthenticationFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,12 +17,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-
+    private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
     private final UserDetailsService userDetailsService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
@@ -44,26 +47,30 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        logger.info("Configuring SecurityFilterChain");
         http
-            .cors(cors -> cors.configurationSource(request -> {
-                var corsConfig = new org.springframework.web.cors.CorsConfiguration();
-                corsConfig.addAllowedOrigin("http://localhost:3000");
-                corsConfig.addAllowedMethod("*");
-                corsConfig.addAllowedHeader("*");
-                corsConfig.setAllowCredentials(true);
-                return corsConfig;
-            }))
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/login").permitAll()
-                .requestMatchers("/api/auth/refresh-token").permitAll()
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/user/**").hasAnyRole("RESIDENT", "ADMIN")
-                .anyRequest().authenticated()
-            )
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
+                .cors(cors -> cors.configurationSource(request -> {
+                    logger.debug("Applying CORS for request: {}", request.getRequestURI());
+                    CorsConfiguration config = new CorsConfiguration();
+                    config.addAllowedOrigin("http://localhost:3000");
+                    config.addAllowedMethod("*");
+                    config.addAllowedHeader("*");
+                    config.setAllowCredentials(true);
+                    config.addExposedHeader("Set-Cookie"); // Expose Set-Cookie header
+                    return config;
+                }))
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> {
+                    logger.info("Setting up authorization rules");
+                    auth
+                            .requestMatchers("/api/auth/**").permitAll()
+                            .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                            .requestMatchers("/api/user/**").hasAnyRole("RESIDENT", "ADMIN")
+                            .anyRequest().authenticated();
+                })
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
-} 
+}

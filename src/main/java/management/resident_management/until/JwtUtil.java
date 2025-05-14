@@ -26,9 +26,9 @@ public class JwtUtil {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public TokenResponse generateToken(Long id, String email, String password, LocalDateTime createdAt) {
-        String refreshToken = generateRefreshToken(id, email, password, createdAt);
-        String accessToken = generateAccessToken(id, refreshToken);
+    public TokenResponse generateToken(Long id, String email, LocalDateTime createdAt) {
+        String refreshToken = generateRefreshToken(id, email, createdAt);
+        String accessToken = generateAccessToken(id, email, refreshToken);
         return new TokenResponse(accessToken, refreshToken);
     }
 
@@ -38,15 +38,14 @@ public class JwtUtil {
         String email = claims.get("email", String.class);
         String password = claims.get("password", String.class);
         LocalDateTime createdAt = LocalDateTime.parse(claims.get("createdAt", String.class));
-        String newAccessToken = generateAccessToken(id, refreshToken);
+        String newAccessToken = generateAccessToken(id, email, refreshToken);
         return new TokenResponse(newAccessToken, refreshToken);
     }
 
-    public String generateRefreshToken(Long id, String email, String password, LocalDateTime createdAt) {
+    public String generateRefreshToken(Long id, String email, LocalDateTime createdAt) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("id", id);
         claims.put("email", email);
-        claims.put("password", password);
         claims.put("createdAt", createdAt.toString());
 
         return Jwts.builder()
@@ -57,9 +56,10 @@ public class JwtUtil {
                 .compact();
     }
 
-    public String generateAccessToken(Long id, String refreshToken) {
+    public String generateAccessToken(Long id, String email, String refreshToken) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("id", id);
+        claims.put("email", email); // Thêm email vào claims
         claims.put("refreshToken", refreshToken);
 
         return Jwts.builder()
@@ -86,7 +86,6 @@ public class JwtUtil {
             Claims claims = extractAllClaims(refreshToken);
             return claims.containsKey("id")
                     && claims.containsKey("email")
-                    && claims.containsKey("password")
                     && claims.containsKey("createdAt")
                     && !isTokenExpired(claims);
         } catch (Exception e) {
@@ -112,5 +111,9 @@ public class JwtUtil {
 
     public String getRefreshTokenFromAccessToken(String accessToken) {
         return extractAllClaims(accessToken).get("refreshToken", String.class);
+    }
+
+    public String getEmailFromToken(String token) {
+        return extractAllClaims(token).get("email", String.class);
     }
 }

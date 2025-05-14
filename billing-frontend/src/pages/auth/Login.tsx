@@ -1,4 +1,4 @@
-  import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Container,
   Box,
@@ -7,9 +7,10 @@ import {
   Button,
   Link,
   Alert,
+  CircularProgress
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import authService from '../../services/authService';
 import { useNotification } from '../../services/notification.service';
 
 const Login: React.FC = () => {
@@ -28,26 +29,40 @@ const Login: React.FC = () => {
     e.preventDefault();
     
     if (!validateEmail(email)) {
-      showError('Please enter a valid email address');
+      showError('Vui lòng nhập địa chỉ email hợp lệ');
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = await axios.post('/api/auth/login', {
-        email: email.toLowerCase(), // Convert to lowercase
-        password,
-      });
-
-      // Store the token in localStorage
-      localStorage.setItem('token', response.data.token);
+      const userInfo = await authService.login(email.toLowerCase(), password);
+      console.log('Login successful, user info:', userInfo);
       
-      showSuccess('Login successful!');
-      // Redirect to dashboard
-      navigate('/dashboard');
-    } catch (err) {
-      showError('Invalid email or password');
+      if (userInfo) {
+        showSuccess('Đăng nhập thành công');
+        
+        // Get role from cookie
+        const role = authService.getRole();
+        console.log('User role:', role);
+        
+        // Redirect based on role
+        if (role === 'ADMIN') {
+          console.log('Redirecting to admin dashboard');
+          navigate('/admin/dashboard', { replace: true });
+        } else if (role === 'RESIDENT') {
+          console.log('Redirecting to resident dashboard');
+          navigate('/resident/dashboard', { replace: true });
+        } else {
+          console.log('Unknown role, redirecting to home');
+          navigate('/', { replace: true });
+        }
+      } else {
+        showError('Không thể lấy thông tin người dùng');
+      }
+    } catch (err: any) {
+      console.error('Login error:', err);
+      showError(err.message || 'Email hoặc mật khẩu không đúng');
     } finally {
       setLoading(false);
     }
@@ -64,7 +79,7 @@ const Login: React.FC = () => {
         }}
       >
         <Typography component="h1" variant="h5">
-          Sign in
+          Đăng nhập
         </Typography>
         <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
           <TextField
@@ -72,21 +87,21 @@ const Login: React.FC = () => {
             required
             fullWidth
             id="email"
-            label="Email Address"
+            label="Email"
             name="email"
             autoComplete="email"
             autoFocus
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             error={email !== '' && !validateEmail(email)}
-            helperText={email !== '' && !validateEmail(email) ? 'Please enter a valid email address' : ''}
+            helperText={email !== '' && !validateEmail(email) ? 'Vui lòng nhập địa chỉ email hợp lệ' : ''}
           />
           <TextField
             margin="normal"
             required
             fullWidth
             name="password"
-            label="Password"
+            label="Mật khẩu"
             type="password"
             id="password"
             autoComplete="current-password"
@@ -100,15 +115,22 @@ const Login: React.FC = () => {
             sx={{ mt: 3, mb: 2 }}
             disabled={loading}
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? (
+              <>
+                <CircularProgress size={24} sx={{ mr: 1 }} />
+                Đang đăng nhập...
+              </>
+            ) : (
+              'Đăng nhập'
+            )}
           </Button>
           <Box sx={{ textAlign: 'center' }}>
             <Link href="/forgot-password" variant="body2">
-              Forgot password?
+              Quên mật khẩu?
             </Link>
             <Typography variant="body2" sx={{ mt: 1 }}>
-              Don't have an account?{' '}
-              <Link href="/register">Sign up</Link>
+              Chưa có tài khoản?{' '}
+              <Link href="/register">Đăng ký</Link>
             </Typography>
           </Box>
         </Box>

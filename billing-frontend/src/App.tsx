@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
@@ -34,28 +34,16 @@ import ResidentProfile from './pages/resident/Profile';
 import { NotFound, Forbidden, ServerError } from './pages/error';
 import authService from './services/authService';
 
-const PrivateRoute: React.FC<{ children: React.ReactNode; role: string }> = ({ children, role }) => {
-  const [user, setUser] = useState<null | { role: string }>(null);
-  const [loading, setLoading] = useState(true);
+const PrivateRoute: React.FC<{ children: React.ReactNode; role?: string }> = ({ children, role }) => {
+  const isAuthenticated = authService.isAuthenticated();
+  const userRole = authService.getRole();
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const currentUser = await authService.getCurrentUser();
-      setUser(currentUser);
-      setLoading(false);
-    };
-
-    fetchUser();
-  }, []);
-
-  if (loading) return <div>Đang kiểm tra quyền truy cập...</div>;
-
-  if (!user) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  if (user.role !== role) {
-    return <Navigate to={user.role === 'ADMIN' ? '/admin/dashboard' : '/resident/dashboard'} replace />;
+  if (role && userRole !== role) {
+    return <Navigate to={userRole === 'ADMIN' ? '/admin/dashboard' : '/resident/dashboard'} replace />;
   }
 
   return <>{children}</>;
@@ -76,8 +64,12 @@ const App: React.FC = () => {
               <Route path="/reset-password" element={<ResetPassword />} />
 
               {/* Main App Routes */}
-              <Route path="/" element={<Layout />}>
-                <Route index element={<Dashboard />} />
+              <Route path="/" element={
+                <PrivateRoute>
+                  <Layout />
+                </PrivateRoute>
+              }>
+                <Route index element={<Navigate to={authService.getRole() === 'ADMIN' ? '/admin/dashboard' : '/resident/dashboard'} replace />} />
                 <Route path="bills" element={<Bills />} />
                 <Route path="residents" element={<Residents />} />
                 <Route path="payments" element={<Payments />} />
@@ -85,10 +77,11 @@ const App: React.FC = () => {
 
               {/* Resident Routes */}
               <Route path="/resident" element={
-                // <PrivateRoute role="RESIDENT">
+                <PrivateRoute role="RESIDENT">
                   <ResidentLayout />
-                // </PrivateRoute>
+                </PrivateRoute>
               }>
+                <Route index element={<Navigate to="dashboard" replace />} />
                 <Route path="dashboard" element={<ResidentDashboard />} />
                 <Route path="payments" element={<ResidentPayments />} />
                 <Route path="absence" element={<ResidentAbsence />} />
@@ -104,6 +97,7 @@ const App: React.FC = () => {
                   <AdminLayout />
                 </PrivateRoute>
               }>
+                <Route index element={<Navigate to="dashboard" replace />} />
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="statistics" element={<Statistics />} />
                 <Route path="residents" element={<Residents />} />
@@ -118,7 +112,8 @@ const App: React.FC = () => {
               {/* Error Routes */}
               <Route path="/error/403" element={<Forbidden />} />
               <Route path="/error/500" element={<ServerError />} />
-              <Route path="*" element={<NotFound />} />
+              <Route path="/404" element={<NotFound />} />
+              <Route path="*" element={<Navigate to="/404" replace />} />
             </Routes>
           </Router>
         </NotificationProvider>
