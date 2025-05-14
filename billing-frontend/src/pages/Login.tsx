@@ -26,17 +26,17 @@ const Login: React.FC = () => {
       const userInfo = await authService.getCurrentUser();
       if (userInfo) {
         console.log('User authenticated:', userInfo);
-        const role = authService.getRole();
-        if (role === 'ADMIN') {
-          navigate('/admin/dashboard', { replace: true });
-        } else if (role === 'RESIDENT') {
-          navigate('/resident/dashboard', { replace: true });
-        }
+        // const role = userInfo.role;
+        // if (role === 'ADMIN') {
+        //   navigate('/admin/dashboard', { replace: true });
+        // } else if (role === 'RESIDENT') {
+        //   navigate('/resident/dashboard', { replace: true });
+        // }
       } else {
         console.log('No authenticated user found');
       }
     }
-    checkAuth();
+    // checkAuth();
   }, [navigate]);
 
   const validateEmail = (email: string) => {
