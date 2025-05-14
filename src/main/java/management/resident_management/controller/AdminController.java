@@ -17,6 +17,11 @@ import java.util.List;
 public class AdminController {
     private final AdminService adminService;
 
+    @GetMapping("")
+    public String sayHello() {
+        return "Hello Admin";
+    }
+
     @GetMapping("/users")
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(adminService.getAllUsers());

@@ -35,7 +35,7 @@ class AuthService {
 
     public async login(email: string, password: string): Promise<LoginResponse> {
         try {
-            const loginResponse = await axiosInstance.post<LoginResponse>('/auth/login', {
+            const loginResponse = await axiosInstance.post<LoginResponse>('/api/auth/login', {
                 email,
                 password
             });
@@ -46,15 +46,22 @@ class AuthService {
                 throw new Error('Invalid login response');
             }
 
-            // Lưu token vào cookie
+            // Save tokens to cookies
             Cookies.set('accessToken', loginResponse.data.token.accessToken, { 
-                expires: 1, // 1 ngày
+                expires: 1, // 1 day
                 secure: true,
                 sameSite: 'strict'
             });
             
             Cookies.set('refreshToken', loginResponse.data.token.refreshToken, {
-                expires: 7, // 7 ngày
+                expires: 7, // 7 days
+                secure: true,
+                sameSite: 'strict'
+            });
+
+            // Save user role
+            Cookies.set('userRole', loginResponse.data.userRole, {
+                expires: 1,
                 secure: true,
                 sameSite: 'strict'
             });
@@ -79,7 +86,7 @@ class AuthService {
         try {
             const accessToken = Cookies.get('accessToken');
             if (accessToken) {
-                await axiosInstance.post('/auth/logout', {}, {
+                await axiosInstance.post('/api/auth/logout', {}, {
                     headers: {
                         Authorization: `Bearer ${accessToken}`
                     }
@@ -91,6 +98,7 @@ class AuthService {
             this.userInfo = null;
             Cookies.remove('accessToken');
             Cookies.remove('refreshToken');
+            Cookies.remove('userRole');
             window.location.href = '/login';
         }
     }
@@ -101,7 +109,7 @@ class AuthService {
 
     public async getUserInfo(): Promise<UserInfo | null> {
         try {
-            const response = await axiosInstance.get<UserInfo>('/user/me');
+            const response = await axiosInstance.get<UserInfo>('/api/user/me');
             
             if (!response.data) {
                 throw new Error('Invalid user info response');
@@ -117,17 +125,22 @@ class AuthService {
     }
 
     public async getCurrentUser(): Promise<UserInfo | null> {
-        const user = await this.getUserInfo();
-        console.log(user);
-        return user;
+        if (this.userInfo) {
+            return this.userInfo;
+        }
+        return this.getUserInfo();
+    }
+
+    public getRole(): string | null {
+        return Cookies.get('userRole') || null;
     }
 
     public isAdmin(): boolean {
-        return this.userInfo?.role === 'ADMIN';
+        return this.getRole() === 'ADMIN';
     }
 
     public isResident(): boolean {
-        return this.userInfo?.role === 'RESIDENT';
+        return this.getRole() === 'RESIDENT';
     }
 }
 

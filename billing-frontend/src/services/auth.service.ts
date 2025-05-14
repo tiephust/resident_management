@@ -27,23 +27,23 @@ export interface AuthResponse {
 
 class AuthService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>('/auth/login', credentials);
+    const response = await api.post<AuthResponse>('/api/auth/login', credentials);
     localStorage.setItem('token', response.data.token);
     return response.data;
   }
 
   async register(data: RegisterData): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>('/auth/register', data);
+    const response = await api.post<AuthResponse>('/api/auth/register', data);
     localStorage.setItem('token', response.data.token);
     return response.data;
   }
 
   async forgotPassword(email: string): Promise<void> {
-    await api.post('/auth/forgot-password', { email });
+    await api.post('/api/auth/forgot-password', { email });
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
-    await api.post('/auth/reset-password', { token, newPassword });
+    await api.post('/api/auth/reset-password', { token, newPassword });
   }
 
   logout(): void {

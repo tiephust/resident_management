@@ -100,9 +100,9 @@ const App: React.FC = () => {
 
               {/* Admin Routes */}
               <Route path="/admin" element={
-                // <PrivateRoute role="ADMIN">
+                <PrivateRoute role="ADMIN">
                   <AdminLayout />
-                // </PrivateRoute>
+                </PrivateRoute>
               }>
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="statistics" element={<Statistics />} />

@@ -50,4 +50,14 @@ api.interceptors.response.use(
   }
 );
 
-export default api; 
+export default api;
+
+export const fetchHelloMessage = async (): Promise<string> => {
+    try {
+        const response = await api.get('/api/admin');
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching hello message:', error);
+        throw new Error('Failed to fetch message from server');
+    }
+}; 
