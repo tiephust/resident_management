@@ -61,7 +61,7 @@ const Login: React.FC = () => {
 
       if (userInfo) {
         showSuccess('Đăng nhập thành công');
-        const role = authService.getRole();
+        const role = userInfo.role;
         console.log('User role:', role);
 
         if (role === 'ADMIN') {

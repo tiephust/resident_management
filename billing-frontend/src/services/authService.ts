@@ -148,18 +148,6 @@ class AuthService {
         }
         return this.getUserInfo();
     }
-
-    public getRole(): string | null {
-        return Cookies.get('userRole') || null;
-    }
-
-    public isAdmin(): boolean {
-        return this.getRole() === 'ADMIN';
-    }
-
-    public isResident(): boolean {
-        return this.getRole() === 'RESIDENT';
-    }
 }
 
 export default AuthService.getInstance();

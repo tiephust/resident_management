@@ -64,9 +64,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> {
                     logger.info("Setting up authorization rules");
                     auth
-                            .requestMatchers("/api/auth/**").permitAll()
-                            .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                            .requestMatchers("/api/user/**").hasAnyRole("RESIDENT", "ADMIN")
+                            .requestMatchers("/api/**").permitAll()
+//                            .requestMatchers("/api/auth/**").permitAll()
+//                            .requestMatchers("/api/admin/**").hasRole("ADMIN")
+//                            .requestMatchers("/api/user/**").hasAnyRole("RESIDENT", "ADMIN")
                             .anyRequest().authenticated();
                 })
                 .authenticationProvider(authenticationProvider())

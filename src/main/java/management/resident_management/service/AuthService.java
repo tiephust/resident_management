@@ -64,15 +64,14 @@ public class AuthService {
         );
         logger.info("Generated tokens for user: {}", user.getEmail());
 
-        setAuthCookies(response, tokenResponse, user.getRole().toString());
+        setAuthCookies(response, tokenResponse);
         return tokenResponse;
     }
 
-    private void setAuthCookies(HttpServletResponse response, TokenResponse tokenResponse, String role) {
+    private void setAuthCookies(HttpServletResponse response, TokenResponse tokenResponse) {
         logger.debug("Setting cookies: accessToken={}, refreshToken={}, userRole={}",
                 tokenResponse.getAccessToken().substring(0, 10) + "...",
-                tokenResponse.getRefreshToken().substring(0, 10) + "...",
-                role);
+                tokenResponse.getRefreshToken().substring(0, 10) + "...");
 
         ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", tokenResponse.getAccessToken())
                 .httpOnly(true)
@@ -90,18 +89,9 @@ public class AuthService {
                 .sameSite("None")
                 .build();
 
-        ResponseCookie roleCookie = ResponseCookie.from("userRole", role)
-                .httpOnly(false)
-                .secure(false)
-                .path("/")
-                .maxAge(3600)
-                .sameSite("None")
-                .build();
-
         response.addHeader("Set-Cookie", accessTokenCookie.toString());
         response.addHeader("Set-Cookie", refreshTokenCookie.toString());
-        response.addHeader("Set-Cookie", roleCookie.toString());
-        logger.info("Cookies set in response: accessToken, refreshToken, userRole");
+        logger.info("Cookies set in response: accessToken, refreshToken");
     }
 
     @Transactional

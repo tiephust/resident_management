@@ -32,18 +32,13 @@ import ResidentFeedback from './pages/resident/Feedback';
 import ResidentComments from './pages/resident/Comments';
 import ResidentProfile from './pages/resident/Profile';
 import { NotFound, Forbidden, ServerError } from './pages/error';
-import authService from './services/authService';
+import FeeNotification from "./pages/admin/FeeNotification";
+import FeedbackManagement from "./pages/admin/FeedbackManagement";
 
 const PrivateRoute: React.FC<{ children: React.ReactNode; role?: string }> = ({ children, role }) => {
-  const isAuthenticated = authService.isAuthenticated();
-  const userRole = authService.getRole();
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (role && userRole !== role) {
-    return <Navigate to={userRole === 'ADMIN' ? '/admin/dashboard' : '/resident/dashboard'} replace />;
+  if (role) {
+    return <Navigate to={role === 'ADMIN' ? '/admin/dashboard' : '/resident/dashboard'} replace />;
   }
 
   return <>{children}</>;
@@ -69,7 +64,7 @@ const App: React.FC = () => {
                   <Layout />
                 </PrivateRoute>
               }>
-                <Route index element={<Navigate to={authService.getRole() === 'ADMIN' ? '/admin/dashboard' : '/resident/dashboard'} replace />} />
+                {/*<Route index element={<Navigate to={ === 'ADMIN' ? '/admin/dashboard' : '/resident/dashboard'} replace />} />*/}
                 <Route path="bills" element={<Bills />} />
                 <Route path="residents" element={<Residents />} />
                 <Route path="payments" element={<Payments />} />
@@ -93,19 +88,22 @@ const App: React.FC = () => {
 
               {/* Admin Routes */}
               <Route path="/admin" element={
-                <PrivateRoute role="ADMIN">
+                // <PrivateRoute role="ADMIN">
                   <AdminLayout />
-                </PrivateRoute>
+                // </PrivateRoute>
               }>
                 <Route index element={<Navigate to="dashboard" replace />} />
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="statistics" element={<Statistics />} />
                 <Route path="residents" element={<Residents />} />
+                <Route path="temporary-residents" element={<ResidentTemporary />} />
                 <Route path="payments" element={<Payments />} />
                 <Route path="temporary-management" element={<TemporaryManagement />} />
                 <Route path="apartment-details" element={<ApartmentDetailsManagement />} />
                 <Route path="fee-types" element={<FeeManagementPage />} />
                 <Route path="devices" element={<DeviceManagement />} />
+                <Route path="notifications" element={<FeeNotification />} />
+                <Route path="feedback" element={<FeedbackManagement />} />
                 <Route path="profile" element={<Profile />} />
               </Route>
 
@@ -113,7 +111,7 @@ const App: React.FC = () => {
               <Route path="/error/403" element={<Forbidden />} />
               <Route path="/error/500" element={<ServerError />} />
               <Route path="/404" element={<NotFound />} />
-              <Route path="*" element={<Navigate to="/404" replace />} />
+              {/*<Route path="*" element={<Navigate to="/404" replace />} />*/}
             </Routes>
           </Router>
         </NotificationProvider>
