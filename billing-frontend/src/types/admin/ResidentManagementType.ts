@@ -20,6 +20,7 @@ export interface Resident {
     updatedAt: string;
     deletedAt: string | null;
     bills: any[];
+    building?: 's1' | 's2';
 }
 
 export type NewResident = Omit<Resident, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'bills'>;

@@ -12,13 +12,11 @@ import {
     Select,
     MenuItem,
 } from '@mui/material';
-import { Resident } from '../../../types/admin/ResidentManagementType';
-
-type NewResident = Omit<Resident, 'createdAt' | 'updatedAt' | 'deletedAt' | 'bills'>;
+import { Resident, NewResident } from '../../../types/admin/ResidentManagementType';
 
 interface AddUserDialogProps {
     open: boolean;
-    resident: Resident | NewResident | null;
+    resident: NewResident | null;
     setResident: React.Dispatch<React.SetStateAction<Resident | NewResident | null>>;
     onClose: () => void;
     onSave: () => void;
