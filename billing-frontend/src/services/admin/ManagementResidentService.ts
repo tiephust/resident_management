@@ -1,9 +1,9 @@
-import axiosInstance from './axiosInstance';
-import { Resident, NewResident } from '../types/admin/ResidentManagementType';
+import axiosInstance from '../axiosInstance';
+import { Resident, NewResident } from '../../types/admin/ResidentManagementType';
 
 const API_URL = 'http://localhost:8080/api/resident';
 
-export const residentService = {
+export const managementResidentService = {
   getAllResidents: async () => {
     const response = await axiosInstance.get(API_URL);
     return response.data;

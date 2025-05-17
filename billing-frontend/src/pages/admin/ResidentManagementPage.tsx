@@ -20,7 +20,7 @@ import {
   IconButton,
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon } from '@mui/icons-material';
-import { residentService } from '../../services/residentService';
+import { managementResidentService } from '../../services/admin/ManagementResidentService';
 import { Resident, NewResident } from '../../types/admin/ResidentManagementType';
 import AddResidentDialog from '../../components/admin/AddResidentDialog';
 import TempResidenceDialog from '../../components/admin/TempResidenceDialog';
@@ -60,7 +60,7 @@ const ResidentManagementPage: React.FC = () => {
   useEffect(() => {
     const loadResidents = async () => {
       try {
-        const data = await residentService.getAllResidents();
+        const data = await managementResidentService.getAllResidents();
         const mappedData = data.map((item: any) => ({
           ...item,
           password: item.password || '',
@@ -108,7 +108,7 @@ const ResidentManagementPage: React.FC = () => {
   // Handle search
   const handleSearch = async () => {
     try {
-      const data = await residentService.searchResidents(searchTerm);
+      const data = await managementResidentService.searchResidents(searchTerm);
       const mappedData = data.map((item: any) => ({
         ...item,
         password: item.password || '',
@@ -212,17 +212,22 @@ const ResidentManagementPage: React.FC = () => {
     setSelectedResident(null);
   };
 
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialog(false);
+    setSelectedResident(null);
+  };
+
   // Data operations
   const handleSaveResident = async () => {
     try {
       if (selectedResident) {
         const { password, gender, hometown, address, description, birthday, stripeCustomerId, isActive, ...residentData } = selectedResident;
         if ('id' in selectedResident && selectedResident.id) {
-          await residentService.updateResident(selectedResident.id, residentData as NewResident);
+          await managementResidentService.updateResident(selectedResident.id, residentData as NewResident);
         } else {
-          await residentService.createResident(residentData as NewResident);
+          await managementResidentService.createResident(residentData as NewResident);
         }
-        const data = await residentService.getAllResidents();
+        const data = await managementResidentService.getAllResidents();
         const mappedData = data.map((item: any) => ({
           ...item,
           password: item.password || '',
@@ -244,9 +249,9 @@ const ResidentManagementPage: React.FC = () => {
 
   const handleDelete = async () => {
     try {
-      if (selectedResident && 'id' in selectedResident && selectedResident.id) {
-        await residentService.deleteResident(selectedResident.id);
-        const data = await residentService.getAllResidents();
+      if (selectedResident && 'id' in selectedResident) {
+        await managementResidentService.deleteResident(selectedResident.id);
+        const data = await managementResidentService.getAllResidents();
         const mappedData = data.map((item: any) => ({
           ...item,
           password: item.password || '',
@@ -259,7 +264,7 @@ const ResidentManagementPage: React.FC = () => {
           stripeCustomerId: item.stripeCustomerId || '',
         }));
         setResidents(mappedData);
-        handleCloseDialog();
+        handleCloseDeleteDialog();
       }
     } catch (error) {
       console.error('Lỗi khi xóa cư dân:', error);
@@ -440,8 +445,9 @@ const ResidentManagementPage: React.FC = () => {
         />
         <DeleteConfirmationDialog
             open={deleteDialog}
-            resident={selectedResident as Resident | null}
-            onClose={handleCloseDialog}
+            title="Xác nhận xóa cư dân"
+            content={`Bạn có chắc chắn muốn xóa cư dân ${selectedResident && 'name' in selectedResident ? selectedResident.name : ''} không?`}
+            onClose={handleCloseDeleteDialog}
             onDelete={handleDelete}
         />
       </PageTemplate>

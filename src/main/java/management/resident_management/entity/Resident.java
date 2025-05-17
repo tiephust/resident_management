@@ -21,7 +21,7 @@ public class Resident extends User {
     private String stripeCustomerId;
 
     @OneToMany(mappedBy = "resident")
-    private List<Bill> bills;
+    private List<Fee> fees;
 
     private LocalDate leaseStartDate;
 

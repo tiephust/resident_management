@@ -3,34 +3,50 @@ import {
     Dialog,
     DialogTitle,
     DialogContent,
+    DialogContentText,
     DialogActions,
     Button,
 } from '@mui/material';
-import { Resident } from '../../types/admin/ResidentManagementType';
 
 interface DeleteConfirmationDialogProps {
     open: boolean;
-    resident: Resident | null;
+    title: string;
+    content: string;
     onClose: () => void;
     onDelete: () => void;
+    deleteButtonText?: string;
+    cancelButtonText?: string;
 }
 
 const DeleteConfirmationDialog: React.FC<DeleteConfirmationDialogProps> = ({
-                                                                               open,
-                                                                               resident,
-                                                                               onClose,
-                                                                               onDelete,
-                                                                           }) => {
+    open,
+    title,
+    content,
+    onClose,
+    onDelete,
+    deleteButtonText = 'Xóa',
+    cancelButtonText = 'Hủy'
+}) => {
     return (
-        <Dialog open={open} onClose={onClose}>
-            <DialogTitle>Xác nhận xóa</DialogTitle>
+        <Dialog 
+            open={open} 
+            onClose={onClose}
+            maxWidth="sm"
+            fullWidth
+        >
+            <DialogTitle>{title}</DialogTitle>
             <DialogContent>
-                Bạn có chắc chắn muốn xóa cư dân {resident?.name} không?
+                <DialogContentText>{content}</DialogContentText>
             </DialogContent>
             <DialogActions>
-                <Button onClick={onClose}>Hủy</Button>
-                <Button variant="contained" color="error" onClick={onDelete}>
-                    Xóa
+                <Button onClick={onClose}>{cancelButtonText}</Button>
+                <Button 
+                    onClick={onDelete} 
+                    color="error" 
+                    variant="contained"
+                    autoFocus
+                >
+                    {deleteButtonText}
                 </Button>
             </DialogActions>
         </Dialog>

@@ -35,6 +35,7 @@ import ResidentFeedback from './pages/resident/Feedback';
 import ResidentComments from './pages/resident/Comments';
 import ResidentProfile from './pages/resident/Profile';
 import { NotFound, Forbidden, ServerError } from './pages/error';
+import FeeTypeManagement from "./pages/admin/FeeTypeManagementPage";
 
 const PrivateRoute: React.FC<{ children: React.ReactNode; role?: string }> = ({ children, role }) => {
 
@@ -102,7 +103,8 @@ const App: React.FC = () => {
                 <Route path="payments" element={<Payments />} />
                 <Route path="temporary-management" element={<TemporaryManagement />} />
                 <Route path="apartment-details" element={<ApartmentDetailsManagement />} />
-                <Route path="fee-types" element={<FeeManagementPage />} />
+                <Route path="fee-types" element={<FeeTypeManagement />} />
+                <Route path="fee-management" element={<FeeManagementPage />} />
                 <Route path="devices" element={<DeviceManagement />} />
                 <Route path="notifications" element={<FeeNotification />} />
                 <Route path="feedback" element={<FeedbackManagement />} />

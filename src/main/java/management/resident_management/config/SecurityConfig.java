@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -21,6 +22,7 @@ import org.springframework.web.cors.CorsConfiguration;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
@@ -56,7 +58,7 @@ public class SecurityConfig {
                     config.addAllowedMethod("*");
                     config.addAllowedHeader("*");
                     config.setAllowCredentials(true);
-                    config.addExposedHeader("Set-Cookie"); // Expose Set-Cookie header
+                    config.addExposedHeader("Set-Cookie");
                     return config;
                 }))
                 .csrf(csrf -> csrf.disable())
@@ -64,9 +66,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> {
                     logger.info("Setting up authorization rules");
                     auth
-//                            .requestMatchers("/api/**").permitAll()
                             .requestMatchers("/api/auth/**").permitAll()
                             .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                            .requestMatchers("/api/fee-type/**").hasRole("ADMIN")
+                            .requestMatchers("/api/fees/**").hasAnyRole("ADMIN", "RESIDENT")
+                            .requestMatchers("/api/fees/admin/**").hasRole("ADMIN")
                             .requestMatchers("/api/user/**").hasAnyRole("RESIDENT", "ADMIN")
                             .anyRequest().authenticated();
                 })
