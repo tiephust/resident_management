@@ -2,16 +2,19 @@ package management.resident_management.service;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import management.resident_management.dto.NewResidentDTO;
+import management.resident_management.dto.ResidentDTO;
 import management.resident_management.entity.Resident;
 import management.resident_management.entity.UserRole;
+import management.resident_management.mapper.ResidentMapper;
 import management.resident_management.repository.ResidentRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,48 +37,63 @@ public class ResidentService {
                 resident.setUpdatedAt(LocalDateTime.now());
                 resident.setUnitNumber("Unit " + (i + 1));
                 resident.setPhoneNumber("555-010" + i);
+                resident.setBuilding(i % 2 == 0 ? "s1" : "s2");
+                resident.setDepartment("A" + (i + 1));
+                resident.setStatus("ACTIVE");
                 residentRepository.save(resident);
             }
         }
     }
 
-    public List<Resident> getAllResidents() {
-        return residentRepository.findAll();
+    public List<ResidentDTO> getAllResidents() {
+        return residentRepository.findAll().stream()
+                .map(ResidentMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
-    public Resident getResidentById(Long id) {
-        return residentRepository.findById(id).orElse(null);
+    public ResidentDTO getResidentById(Long id) {
+        return residentRepository.findById(id)
+                .map(ResidentMapper::toDTO)
+                .orElse(null);
     }
 
-    public Resident createResident(Resident resident) {
-        return residentRepository.save(resident);
-    }
-
-    public Resident updateResident(Long id, Resident resident) {
-        Resident existingResident = residentRepository.findById(id).orElse(null);
-        if (existingResident != null) {
-            existingResident.setName(resident.getName());
-            existingResident.setEmail(resident.getEmail());
-            existingResident.setPhoneNumber(resident.getPhoneNumber());
-            existingResident.setUnitNumber(resident.getUnitNumber());
-            existingResident.setDepartment(resident.getDepartment());
-            existingResident.setLeaseStartDate(resident.getLeaseStartDate());
-            existingResident.setLeaseEndDate(resident.getLeaseEndDate());
-            return residentRepository.save(existingResident);
+    public ResidentDTO createResident(NewResidentDTO residentDTO) {
+        Resident resident = ResidentMapper.toEntity(residentDTO);
+        if (resident == null) {
+            throw new IllegalArgumentException("Invalid resident data");
         }
-        return null;
+        resident.setPassword(passwordEncoder.encode("password123"));
+        resident.setCreatedAt(LocalDateTime.now());
+        resident.setUpdatedAt(LocalDateTime.now());
+        Resident savedResident = residentRepository.save(resident);
+        return ResidentMapper.toDTO(savedResident);
+    }
+
+    public ResidentDTO updateResident(Long id, NewResidentDTO residentDTO) {
+        Resident existingResident = residentRepository.findById(id).orElse(null);
+        if (existingResident == null) {
+            return null;
+        }
+        ResidentMapper.updateEntity(existingResident, residentDTO);
+        existingResident.setUpdatedAt(LocalDateTime.now());
+        Resident updatedResident = residentRepository.save(existingResident);
+        return ResidentMapper.toDTO(updatedResident);
     }
 
     public void deleteResident(Long id) {
         residentRepository.deleteById(id);
     }
 
-    public List<Resident> searchResidents(String searchTerm) {
+    public List<ResidentDTO> searchResidents(String searchTerm) {
         return residentRepository.findByNameContainingOrEmailContainingOrPhoneNumberContaining(
-            searchTerm, searchTerm, searchTerm);
+                        searchTerm, searchTerm, searchTerm).stream()
+                .map(ResidentMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
-    public List<Resident> getResidentsByStatus(String status) {
-        return residentRepository.findByStatus(status);
+    public List<ResidentDTO> getResidentsByStatus(String status) {
+        return residentRepository.findByStatus(status).stream()
+                .map(ResidentMapper::toDTO)
+                .collect(Collectors.toList());
     }
 }

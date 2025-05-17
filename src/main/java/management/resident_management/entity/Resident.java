@@ -31,4 +31,6 @@ public class Resident extends User {
     private String department;
 
     private String status;
+
+    private String building;
 }

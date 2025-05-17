@@ -22,7 +22,7 @@ import ResidentManagementPages from './pages/admin/ResidentManagementPage';
 import Statistics from './pages/admin/Statistics';
 import TemporaryManagement from './pages/admin/TemporaryManagement';
 import ApartmentDetailsManagement from './pages/admin/ApartmentDetailsManagement';
-import FeeManagementPage from './pages/admin/FeeManagement';
+import FeeManagementPage from './pages/admin/FeeManagementPage';
 import DeviceManagement from './pages/admin/DeviceManagement';
 import Profile from './pages/admin/Profile';
 import FeeNotification from "./pages/admin/FeeNotification";

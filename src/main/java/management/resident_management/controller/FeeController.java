@@ -1,5 +1,6 @@
 package management.resident_management.controller;
 
+import management.resident_management.dto.FeeDTO;
 import management.resident_management.entity.Fee;
 import management.resident_management.service.FeeService;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,7 @@ public class FeeController {
     private final FeeService feeService;
 
     @GetMapping
-    public ResponseEntity<List<Fee>> getAllFees() {
+    public ResponseEntity<List<FeeDTO>> getAllFees() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -29,7 +30,7 @@ public class FeeController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Fee> getFeeById(@PathVariable Long id) {
+    public ResponseEntity<FeeDTO> getFeeById(@PathVariable Long id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -38,7 +39,7 @@ public class FeeController {
     }
 
     @PostMapping
-    public ResponseEntity<Fee> createFee(@RequestBody Fee fee) {
+    public ResponseEntity<FeeDTO> createFee(@RequestBody Fee fee) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -47,7 +48,7 @@ public class FeeController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Fee> updateFee(@PathVariable Long id, @RequestBody Fee fee) {
+    public ResponseEntity<FeeDTO> updateFee(@PathVariable Long id, @RequestBody Fee fee) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -66,7 +67,7 @@ public class FeeController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<Fee>> searchFees(@RequestParam String searchTerm) {
+    public ResponseEntity<List<FeeDTO>> searchFees(@RequestParam String searchTerm) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -75,7 +76,7 @@ public class FeeController {
     }
 
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<Fee>> getFeesByStatus(@PathVariable String status) {
+    public ResponseEntity<List<FeeDTO>> getFeesByStatus(@PathVariable String status) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -84,7 +85,7 @@ public class FeeController {
     }
 
     @GetMapping("/resident/{residentId}")
-    public ResponseEntity<List<Fee>> getFeesByResident(@PathVariable Long residentId) {
+    public ResponseEntity<List<FeeDTO>> getFeesByResident(@PathVariable Long residentId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
