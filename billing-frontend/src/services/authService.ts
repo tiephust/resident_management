@@ -1,6 +1,4 @@
 import axiosInstance from './axiosInstance';
-import Cookies from 'js-cookie';
-import axios from 'axios';
 
 interface UserInfo {
     id: number;
@@ -41,29 +39,16 @@ class AuthService {
                 throw new Error('Invalid login response');
             }
 
-            // Lưu refreshToken và accessToken vào cookie
-            Cookies.set('refreshToken', loginResponse.data.refreshToken, {
-                expires: 7,
-                secure: false,
-                sameSite: 'none'
-            });
+            // Lưu refreshToken và accessToken vào localStorage
+            localStorage.setItem('refreshToken', loginResponse.data.refreshToken);
+            localStorage.setItem('accessToken', loginResponse.data.accessToken);
 
-            Cookies.set('accessToken', loginResponse.data.accessToken, {
-                expires: 1,
-                secure: false,
-                sameSite: 'none'
-            });
+            console.log('Tokens set in localStorage: accessToken, refreshToken');
+            console.log('Access token in localStorage:', localStorage.getItem('accessToken'));
 
-            console.log('Cookies set: accessToken, refreshToken');
-            console.log('Access token cookie:', Cookies.get('accessToken'));
-
-            const userInfo = await this.getUserInfo(loginResponse.data.accessToken);
+            const userInfo = await this.getUserInfo();
             if (userInfo) {
-                Cookies.set('userRole', userInfo.role, {
-                    expires: 1,
-                    secure: false,
-                    sameSite: 'none'
-                });
+                localStorage.setItem('userRole', userInfo.role);
                 console.log('User info fetched:', userInfo);
                 return userInfo;
             } else {
@@ -92,33 +77,29 @@ class AuthService {
             console.error('Logout error:', error);
         } finally {
             this.userInfo = null;
-            Cookies.remove('accessToken');
-            Cookies.remove('refreshToken');
-            Cookies.remove('userRole');
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('userRole');
             window.location.href = '/login';
         }
     }
 
     public isAuthenticated(): boolean {
-        const token = Cookies.get('accessToken');
+        const token = localStorage.getItem('accessToken');
         console.log('Checking authentication, accessToken:', token ? 'exists' : 'not found');
         return !!token;
     }
 
-    public async getUserInfo(accessToken?: string): Promise<UserInfo | null> {
+    public async getUserInfo(): Promise<UserInfo | null> {
         try {
-            let token = accessToken || Cookies.get('accessToken');
+            const token = localStorage.getItem('accessToken');
             if (!token) {
-                console.log('No access token found');
+                console.log('No access token found in localStorage');
                 return null;
             }
 
-            console.log('Fetching user info with token:', token.substring(0, 10) + '...');
-            const response = await axiosInstance.get<UserInfo>('/api/user/me', {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
+            console.log('Fetching user info...');
+            const response = await axiosInstance.get<UserInfo>('/api/user/me');
 
             if (!response.data) {
                 console.log('Invalid user info response');
@@ -128,11 +109,7 @@ class AuthService {
             this.userInfo = response.data;
             console.log('User info fetched:', this.userInfo);
             if (this.userInfo) {
-                Cookies.set('userRole', this.userInfo.role, {
-                    expires: 1,
-                    secure: false,
-                    sameSite: 'none'
-                });
+                localStorage.setItem('userRole', this.userInfo.role);
             }
             return this.userInfo;
         } catch (error) {

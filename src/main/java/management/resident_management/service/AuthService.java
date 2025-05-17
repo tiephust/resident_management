@@ -69,20 +69,20 @@ public class AuthService {
     }
 
     private void setAuthCookies(HttpServletResponse response, TokenResponse tokenResponse) {
-        logger.debug("Setting cookies: accessToken={}, refreshToken={}, userRole={}",
+        logger.debug("Setting cookies: accessToken={}, refreshToken={}",
                 tokenResponse.getAccessToken().substring(0, 10) + "...",
                 tokenResponse.getRefreshToken().substring(0, 10) + "...");
 
         ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", tokenResponse.getAccessToken())
-                .httpOnly(true)
-                .secure(false) // Không yêu cầu secure trên localhost
+                .httpOnly(false)
+                .secure(false)
                 .path("/")
                 .maxAge(3600)
-                .sameSite("None") // Thử SameSite: None cho localhost
+                .sameSite("None")
                 .build();
 
         ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", tokenResponse.getRefreshToken())
-                .httpOnly(true)
+                .httpOnly(false)
                 .secure(false)
                 .path("/")
                 .maxAge(86400)
@@ -131,23 +131,22 @@ public class AuthService {
 
     private void clearAuthCookies(HttpServletResponse response) {
         ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", "")
+                .httpOnly(false)
                 .maxAge(0)
                 .path("/")
+                .sameSite("None")
                 .build();
 
         ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(false)
                 .maxAge(0)
                 .path("/")
-                .build();
-
-        ResponseCookie roleCookie = ResponseCookie.from("userRole", "")
-                .maxAge(0)
-                .path("/")
+                .sameSite("None")
                 .build();
 
         response.addHeader("Set-Cookie", accessTokenCookie.toString());
         response.addHeader("Set-Cookie", refreshTokenCookie.toString());
-        response.addHeader("Set-Cookie", roleCookie.toString());
+        logger.info("Cookies cleared in response: accessToken, refreshToken");
     }
 
     private void setNoCacheHeaders(HttpServletResponse response) {

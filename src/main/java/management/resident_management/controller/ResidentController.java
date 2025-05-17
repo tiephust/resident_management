@@ -2,7 +2,11 @@ package management.resident_management.controller;
 
 import management.resident_management.entity.Resident;
 import management.resident_management.service.ResidentService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -10,43 +14,72 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/resident")
 @CrossOrigin(origins = "http://localhost:3000")
+@RequiredArgsConstructor
 public class ResidentController {
 
-    @Autowired
-    private ResidentService residentService;
+    private final ResidentService residentService;
 
     @GetMapping
-    public List<Resident> getAllResidents() {
-        return residentService.getAllResidents();
+    public ResponseEntity<List<Resident>> getAllResidents() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(residentService.getAllResidents());
     }
 
     @GetMapping("/{id}")
-    public Resident getResidentById(@PathVariable Long id) {
-        return residentService.getResidentById(id);
+    public ResponseEntity<Resident> getResidentById(@PathVariable Long id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(residentService.getResidentById(id));
     }
 
     @PostMapping
-    public Resident createResident(@RequestBody Resident resident) {
-        return residentService.createResident(resident);
+    public ResponseEntity<Resident> createResident(@RequestBody Resident resident) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(residentService.createResident(resident));
     }
 
     @PutMapping("/{id}")
-    public Resident updateResident(@PathVariable Long id, @RequestBody Resident resident) {
-        return residentService.updateResident(id, resident);
+    public ResponseEntity<Resident> updateResident(@PathVariable Long id, @RequestBody Resident resident) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(residentService.updateResident(id, resident));
     }
 
     @DeleteMapping("/{id}")
-    public void deleteResident(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteResident(@PathVariable Long id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         residentService.deleteResident(id);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/search")
-    public List<Resident> searchResidents(@RequestParam String searchTerm) {
-        return residentService.searchResidents(searchTerm);
+    public ResponseEntity<List<Resident>> searchResidents(@RequestParam String searchTerm) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(residentService.searchResidents(searchTerm));
     }
 
     @GetMapping("/status/{status}")
-    public List<Resident> getResidentsByStatus(@PathVariable String status) {
-        return residentService.getResidentsByStatus(status);
+    public ResponseEntity<List<Resident>> getResidentsByStatus(@PathVariable String status) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(residentService.getResidentsByStatus(status));
     }
-} 
+}

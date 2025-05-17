@@ -31,7 +31,6 @@ public class User implements UserDetails {
 
     private String password;
 
-    @Column(nullable = true)
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
@@ -49,10 +48,8 @@ public class User implements UserDetails {
 
     private String address;
 
-    @Column(nullable = true)
     private String description;
 
-    @Column(nullable = true)
     private LocalDate birthday;
 
 //    @Column(nullable = false)

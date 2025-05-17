@@ -17,13 +17,16 @@ import Residents from './pages/Residents';
 import Payments from './pages/Payments';
 import AdminLayout from './components/AdminLayout';
 import ResidentLayout from './components/ResidentLayout';
-import AdminDashboard from './pages/admin/Dashboard';
+import AdminDashboard from './pages/admin/DashboardPage';
+import ResidentManagementPages from './pages/admin/ResidentManagementPage';
 import Statistics from './pages/admin/Statistics';
 import TemporaryManagement from './pages/admin/TemporaryManagement';
 import ApartmentDetailsManagement from './pages/admin/ApartmentDetailsManagement';
 import FeeManagementPage from './pages/admin/FeeManagement';
 import DeviceManagement from './pages/admin/DeviceManagement';
 import Profile from './pages/admin/Profile';
+import FeeNotification from "./pages/admin/FeeNotification";
+import FeedbackManagement from "./pages/admin/FeedbackManagement";
 import ResidentDashboard from './pages/resident/Dashboard';
 import ResidentPayments from './pages/resident/Payments';
 import ResidentAbsence from './pages/resident/Absence';
@@ -32,8 +35,6 @@ import ResidentFeedback from './pages/resident/Feedback';
 import ResidentComments from './pages/resident/Comments';
 import ResidentProfile from './pages/resident/Profile';
 import { NotFound, Forbidden, ServerError } from './pages/error';
-import FeeNotification from "./pages/admin/FeeNotification";
-import FeedbackManagement from "./pages/admin/FeedbackManagement";
 
 const PrivateRoute: React.FC<{ children: React.ReactNode; role?: string }> = ({ children, role }) => {
 
@@ -96,6 +97,7 @@ const App: React.FC = () => {
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="statistics" element={<Statistics />} />
                 <Route path="residents" element={<Residents />} />
+                <Route path="resident-management" element={<ResidentManagementPages />} />
                 <Route path="temporary-residents" element={<ResidentTemporary />} />
                 <Route path="payments" element={<Payments />} />
                 <Route path="temporary-management" element={<TemporaryManagement />} />

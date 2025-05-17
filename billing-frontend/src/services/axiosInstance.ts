@@ -1,5 +1,4 @@
 import axios from 'axios';
-import Cookies from 'js-cookie';
 
 const axiosInstance = axios.create({
     baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8080',
@@ -13,6 +12,13 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
     (config) => {
         console.log('Sending request to:', config.url, 'with data:', config.data);
+        const accessToken = localStorage.getItem('accessToken');
+        if (accessToken) {
+            config.headers['Authorization'] = `Bearer ${accessToken}`;
+            console.log('Added Authorization header with token:', accessToken.substring(0, 10) + '...');
+        } else {
+            console.log('No access token found in localStorage for request');
+        }
         return config;
     },
     (error) => {
@@ -38,9 +44,9 @@ axiosInstance.interceptors.response.use(
         ) {
             originalRequest._retry = true;
             try {
-                const refreshToken = Cookies.get('refreshToken');
+                const refreshToken = localStorage.getItem('refreshToken');
                 if (!refreshToken) {
-                    console.error('No refresh token available');
+                    console.error('No refresh token available in localStorage');
                     throw new Error('No refresh token available');
                 }
 
@@ -53,18 +59,14 @@ axiosInstance.interceptors.response.use(
 
                 const { accessToken } = response.data;
                 console.log('New access token received');
-                Cookies.set('accessToken', accessToken, {
-                    expires: 1,
-                    secure: false,
-                    sameSite: 'none'
-                });
+                localStorage.setItem('accessToken', accessToken);
 
                 return axiosInstance(originalRequest);
             } catch (refreshError) {
                 console.error('Refresh token failed:', refreshError);
-                Cookies.remove('accessToken');
-                Cookies.remove('refreshToken');
-                Cookies.remove('userRole');
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+                localStorage.removeItem('userRole');
                 window.location.href = '/login';
                 return Promise.reject(refreshError);
             }

@@ -20,4 +20,8 @@ export interface Bill {
 export interface PaymentIntentResponse {
     clientSecret: string;
     publicKey: string;
-} 
+}
+
+export interface Message {
+    content : string;
+}
