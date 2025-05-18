@@ -77,7 +77,7 @@ const AdminLayout = () => {
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/admin/dashboard' },
     { text: 'Thống kê', icon: <StatisticsIcon />, path: '/admin/statistics' },
     { text: 'Quản lý cư dân', icon: <ResidentsIcon />, path: '/admin/resident-management' },
-    { text: 'Quản lý tạm trú', icon: <PersonAddIcon />, path: '/admin/temporary-residents' },
+    { text: 'Quản lý tạm vắng', icon: <PersonAddIcon />, path: '/admin/temporary-residents' },
     { text: 'Quản lý thông tin căn hộ', icon: <ApartmentIcon />, path: '/admin/apartment-details' },
     { text: 'Quản lý loaị phí', icon: <SettingsIcon />, path: '/admin/fee-types' },
     { text: 'Quản lý đóng phí', icon: <PaymentIcon />, path: '/admin/fee-management' },
