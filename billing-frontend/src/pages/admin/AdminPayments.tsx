@@ -19,7 +19,7 @@ import {
 } from '@mui/material';
 import { Receipt as ReceiptIcon } from '@mui/icons-material';
 import PageTemplate from '../../components/PageTemplate';
-import { feeService } from '../../services/feeService';
+import { feeService } from '../../services/admin/feeService';
 import { FeeDTO } from '../../types/fee';
 
 const AdminPayments: React.FC = () => {

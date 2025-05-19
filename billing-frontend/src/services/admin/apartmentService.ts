@@ -1,10 +1,10 @@
-import axiosInstance from "./axiosInstance";
-import { ApartmentDTO, NewApartmentDTO } from '../types/admin/ApartmentServiceType';
+import axiosInstance from "../axiosInstance";
+import { ApartmentDetail, NewApartment } from '../../types/admin/ApartmentManagementType';
 
 const API_URL = 'http://localhost:8080/api/apartment';
 
 export const apartmentService = {
-    getAllApartments: async (): Promise<ApartmentDTO[]> => {
+    getAllApartments: async (): Promise<ApartmentDetail[]> => {
         const response = await axiosInstance.get(API_URL);
         return response.data.map((d: any) => ({
             ...d,
@@ -13,7 +13,7 @@ export const apartmentService = {
         }));
     },
 
-    getApartmentById: async (id: number): Promise<ApartmentDTO> => {
+    getApartmentById: async (id: number): Promise<ApartmentDetail> => {
         const response = await axiosInstance.get(`${API_URL}/${id}`);
         const data = response.data;
         return {
@@ -23,13 +23,21 @@ export const apartmentService = {
         };
     },
 
-    createApartment: async (apartment: NewApartmentDTO): Promise<ApartmentDTO> => {
-        const response = await axiosInstance.post(API_URL, apartment);
+    createApartment: async (apartment: NewApartment): Promise<ApartmentDetail> => {
+        const response = await axiosInstance.post(API_URL, {
+            name: apartment.name,
+            apartmentOwnerId: apartment.apartmentOwnerId,
+            description: apartment.description,
+        });
         return response.data;
     },
 
-    updateApartment: async (id: number, apartment: NewApartmentDTO): Promise<ApartmentDTO> => {
-        const response = await axiosInstance.put(`${API_URL}/${id}`, apartment);
+    updateApartment: async (id: number, apartment: NewApartment): Promise<ApartmentDetail> => {
+        const response = await axiosInstance.put(`${API_URL}/${id}`, {
+            name: apartment.name,
+            apartmentOwnerId: apartment.apartmentOwnerId,
+            description: apartment.description,
+        });
         return response.data;
     },
 
@@ -37,7 +45,7 @@ export const apartmentService = {
         await axiosInstance.delete(`${API_URL}/${id}`);
     },
 
-    searchApartments: async (searchTerm: string): Promise<ApartmentDTO[]> => {
+    searchApartments: async (searchTerm: string): Promise<ApartmentDetail[]> => {
         const response = await axiosInstance.get(`${API_URL}/search?searchTerm=${searchTerm}`);
         return response.data.map((d: any) => ({
             ...d,

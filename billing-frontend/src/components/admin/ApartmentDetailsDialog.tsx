@@ -18,6 +18,7 @@ import {
     Paper,
     Typography,
     IconButton,
+    Box,
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { ApartmentDetail, Vehicle } from '../../types/admin/ApartmentManagementType';
@@ -36,16 +37,16 @@ interface ApartmentDetailsDialogProps {
 }
 
 const ApartmentDetailsDialog: React.FC<ApartmentDetailsDialogProps> = ({
-                                                                           open,
-                                                                           apartment,
-                                                                           devices,
-                                                                           onClose,
-                                                                           onSave,
-                                                                           onAddVehicle,
-                                                                           onEditVehicle,
-                                                                           onDeleteVehicle,
-                                                                           onAddDevice,
-                                                                       }) => {
+    open,
+    apartment,
+    devices,
+    onClose,
+    onSave,
+    onAddVehicle,
+    onEditVehicle,
+    onDeleteVehicle,
+    onAddDevice,
+}) => {
     const [tabValue, setTabValue] = useState(0);
 
     const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -55,7 +56,7 @@ const ApartmentDetailsDialog: React.FC<ApartmentDetailsDialogProps> = ({
     return (
         <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
             <DialogTitle>
-                Chi tiết căn hộ {apartment?.building} - {apartment?.apartmentNumber}
+                Chi tiết căn hộ {apartment?.building} - {apartment?.name}
             </DialogTitle>
             <DialogContent>
                 <Tabs value={tabValue} onChange={handleTabChange} sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
@@ -71,7 +72,7 @@ const ApartmentDetailsDialog: React.FC<ApartmentDetailsDialogProps> = ({
                             <TextField
                                 label="Số căn hộ"
                                 fullWidth
-                                value={apartment?.apartmentNumber}
+                                value={apartment?.name}
                                 disabled
                             />
                         </Grid>
@@ -95,7 +96,8 @@ const ApartmentDetailsDialog: React.FC<ApartmentDetailsDialogProps> = ({
                             <TextField
                                 label="Chủ căn hộ"
                                 fullWidth
-                                defaultValue={apartment?.ownerName}
+                                value={apartment?.ownerName}
+                                disabled
                             />
                         </Grid>
                         <Grid item xs={4}>
@@ -103,7 +105,8 @@ const ApartmentDetailsDialog: React.FC<ApartmentDetailsDialogProps> = ({
                                 label="Số người ở"
                                 fullWidth
                                 type="number"
-                                defaultValue={apartment?.numResidents}
+                                value={apartment?.numResidents}
+                                disabled
                             />
                         </Grid>
                         <Grid item xs={4}>
@@ -111,7 +114,8 @@ const ApartmentDetailsDialog: React.FC<ApartmentDetailsDialogProps> = ({
                                 label="Số chìa khóa"
                                 fullWidth
                                 type="number"
-                                defaultValue={apartment?.numKeys}
+                                value={apartment?.numKeys}
+                                disabled
                             />
                         </Grid>
                         <Grid item xs={4}>
@@ -119,7 +123,8 @@ const ApartmentDetailsDialog: React.FC<ApartmentDetailsDialogProps> = ({
                                 label="Số chỗ để xe máy"
                                 fullWidth
                                 type="number"
-                                defaultValue={apartment?.parkingSlots.bike}
+                                value={apartment?.parkingSlots?.bike}
+                                disabled
                             />
                         </Grid>
                     </Grid>
@@ -152,7 +157,7 @@ const ApartmentDetailsDialog: React.FC<ApartmentDetailsDialogProps> = ({
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {apartment?.vehicles.map((vehicle) => (
+                                    {apartment?.vehicles?.map((vehicle) => (
                                         <TableRow key={vehicle.id}>
                                             <TableCell>{vehicle.type}</TableCell>
                                             <TableCell>{vehicle.licensePlate}</TableCell>
@@ -211,7 +216,7 @@ const ApartmentDetailsDialog: React.FC<ApartmentDetailsDialogProps> = ({
                                     {devices.map((device) => (
                                         <TableRow key={device.id}>
                                             <TableCell>{device.name}</TableCell>
-                                            <TableCell>{device.deviceType}</TableCell>
+                                            <TableCell>{device.type}</TableCell>
                                             <TableCell>{device.status}</TableCell>
                                             <TableCell>{device.maintenanceAt}</TableCell>
                                         </TableRow>
@@ -228,7 +233,8 @@ const ApartmentDetailsDialog: React.FC<ApartmentDetailsDialogProps> = ({
                         fullWidth
                         multiline
                         rows={4}
-                        defaultValue={apartment?.notes}
+                        value={apartment?.description || ''}
+                        disabled
                         sx={{ mt: 2 }}
                     />
                 )}

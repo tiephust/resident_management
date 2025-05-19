@@ -1,6 +1,6 @@
 // services/deviceService.ts
-import axiosInstance from "./axiosInstance";
-import { Device, NewDevice } from '../types/admin/DeviceManagementType';
+import axiosInstance from "../axiosInstance";
+import { Device, NewDevice } from '../../types/admin/DeviceManagementType';
 
 const API_URL = 'http://localhost:8080/api/device';
 

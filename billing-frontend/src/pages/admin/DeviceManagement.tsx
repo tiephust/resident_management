@@ -17,7 +17,7 @@ import {
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import DeviceDialog from '../../components/admin/DeviceDialog';
 import { Device, NewDevice } from '../../types/admin/DeviceManagementType';
-import { deviceService } from '../../services/deviceService';
+import { deviceService } from '../../services/admin/deviceService';
 
 const DeviceManagement = () => {
   const [devices, setDevices] = useState<Device[]>([]);

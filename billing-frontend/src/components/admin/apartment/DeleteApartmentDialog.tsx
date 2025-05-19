@@ -10,17 +10,17 @@ interface DeleteApartmentDialogProps {
 }
 
 const DeleteApartmentDialog: React.FC<DeleteApartmentDialogProps> = ({
-                                                                         open,
-                                                                         apartment,
-                                                                         onClose,
-                                                                         onDelete,
-                                                                     }) => {
+    open,
+    apartment,
+    onClose,
+    onDelete,
+}) => {
     return (
         <Dialog open={open} onClose={onClose}>
             <DialogTitle>Xác nhận xóa</DialogTitle>
             <DialogContent>
                 <Alert severity="warning" sx={{ mt: 2 }}>
-                    Bạn có chắc chắn muốn xóa thông tin căn hộ {apartment?.building} - {apartment?.apartmentNumber}?
+                    Bạn có chắc chắn muốn xóa thông tin căn hộ {apartment?.building} - {apartment?.name}?
                     Hành động này không thể hoàn tác.
                 </Alert>
             </DialogContent>

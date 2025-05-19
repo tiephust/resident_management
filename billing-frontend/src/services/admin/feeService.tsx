@@ -1,5 +1,5 @@
-import axiosInstance from './axiosInstance';
-import { FeeDTO, PaymentRequestDTO, RefundRequestDTO } from '../types/fee';
+import axiosInstance from '../axiosInstance';
+import { FeeDTO, PaymentRequestDTO, RefundRequestDTO } from '../../types/fee';
 
 export const feeService = {
     getPayments: async (status: string = 'ALL', residentName: string = ''): Promise<FeeDTO[]> => {

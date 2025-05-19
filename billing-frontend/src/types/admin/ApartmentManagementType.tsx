@@ -14,15 +14,41 @@ export interface ParkingSlots {
 
 export interface ApartmentDetail {
     id: number;
-    apartmentNumber: string;
-    building: 'S1' | 'S2';
-    floor: number;
-    ownerName: string;
-    vehicles: Vehicle[];
-    numResidents: number;
-    numKeys: number;
-    parkingSlots: ParkingSlots;
-    notes: string;
+    name: string;
     apartmentOwnerId: number;
+    description: string | null;
+    feeIds: number[];
+    residentIds: number[];
     deviceIds: number[];
+    createdAt: string | null;
+    updatedAt: string | null;
+    // Additional frontend-only fields
+    building?: 'S1' | 'S2';
+    floor?: number;
+    ownerName?: string;
+    vehicles?: Vehicle[];
+    numResidents?: number;
+    numKeys?: number;
+    parkingSlots?: {
+        car: number;
+        bike: number;
+    };
+    notes?: string;
+}
+
+export interface NewApartment {
+    name: string;
+    apartmentOwnerId: number;
+    description?: string | null;
+    // Additional frontend-only fields
+    building?: 'S1' | 'S2';
+    floor?: number;
+    ownerName?: string;
+    numResidents?: number;
+    numKeys?: number;
+    parkingSlots?: {
+        car: number;
+        bike: number;
+    };
+    notes?: string;
 }

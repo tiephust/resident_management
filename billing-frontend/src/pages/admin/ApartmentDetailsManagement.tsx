@@ -20,12 +20,12 @@ import DeleteApartmentDialog from '../../components/admin/apartment/DeleteApartm
 import AddVehicleDialog from '../../components/admin/apartment/AddVehicleDialog';
 import EditVehicleDialog from '../../components/admin/apartment/EditVehicleDialog';
 import DeleteVehicleDialog from '../../components/admin/apartment/DeleteVehicleDialog';
-import AddDeviceDialog from './AddDeviceDialog';
-import { ApartmentDetail, Vehicle } from '../../types/admin/ApartmentManagementType';
+import AddDeviceDialog from '../../components/admin/apartment/AddDeviceDialog';
+import { ApartmentDetail, Vehicle, NewApartment } from '../../types/admin/ApartmentManagementType';
 import { Device, NewDevice } from '../../types/admin/DeviceManagementType';
-import { apartmentService } from '../../services/apartmentService';
+import { apartmentService } from '../../services/admin/apartmentService';
 import { managementResidentService } from '../../services/admin/ManagementResidentService';
-import { deviceService } from '../../services/deviceService';
+import { deviceService } from '../../services/admin/deviceService';
 
 const ApartmentDetailsManagement = () => {
   const [apartments, setApartments] = useState<ApartmentDetail[]>([]);
@@ -40,16 +40,15 @@ const ApartmentDetailsManagement = () => {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [addApartmentDialogOpen, setAddApartmentDialogOpen] = useState(false);
-  const [newApartment, setNewApartment] = useState<Partial<Omit<ApartmentDetail, 'id' | 'vehicles' | 'deviceIds'>> & { parkingSlots: { car: number; bike: number } }>({
+  const [newApartment, setNewApartment] = useState<NewApartment>({
+    name: '',
+    apartmentOwnerId: 0,
+    description: '',
     building: 'S1',
-    apartmentNumber: '',
     floor: 1,
-    ownerName: '',
     numResidents: 1,
     numKeys: 1,
     parkingSlots: { car: 0, bike: 0 },
-    notes: '',
-    apartmentOwnerId: 0,
   });
   const [newVehicle, setNewVehicle] = useState<Partial<Vehicle>>({
     type: 'Xe máy',
@@ -60,7 +59,7 @@ const ApartmentDetailsManagement = () => {
   });
   const [newDevice, setNewDevice] = useState<NewDevice>({
     name: '',
-    deviceType: '',
+    type: '',
     status: 'ACTIVE',
     maintenanceAt: new Date().toISOString().split('T')[0],
     apartmentId: 0,
@@ -74,33 +73,29 @@ const ApartmentDetailsManagement = () => {
         setLoading(true);
         const apartmentsData = await apartmentService.getAllApartments();
         const apartmentsWithDetails = await Promise.all(
-            apartmentsData.map(async (apt) => {
-              const owner = apt.apartmentOwnerId
-                  ? await managementResidentService.getResidentById(apt.apartmentOwnerId)
-                  : { name: 'Không xác định' };
-              const devices = apt.deviceIds.length
-                  ? await Promise.all(apt.deviceIds.map((id) => deviceService.getDeviceById(id)))
-                  : [];
-              return {
-                id: apt.id,
-                apartmentNumber: apt.name,
-                building: 'S1', // Giả định, cần ánh xạ từ backend
-                floor: 1, // Giả định
-                ownerName: owner.name,
-                vehicles: [], // Giả định, cần API để lấy phương tiện
-                numResidents: apt.residentIds.length,
-                numKeys: 0, // Giả định
-                parkingSlots: { car: 0, bike: 0 }, // Giả định
-                notes: apt.description || '',
-                apartmentOwnerId: apt.apartmentOwnerId,
-                deviceIds: apt.deviceIds,
-              };
-            })
+          apartmentsData.map(async (apt) => {
+            const owner = apt.apartmentOwnerId
+              ? await managementResidentService.getResidentById(apt.apartmentOwnerId)
+              : { name: 'Không xác định' };
+            const devices = apt.deviceIds.length
+              ? await Promise.all(apt.deviceIds.map((id) => deviceService.getDeviceById(id)))
+              : [];
+            return {
+              ...apt,
+              building: 'S1' as const,
+              floor: 1,
+              ownerName: owner.name,
+              vehicles: [],
+              numResidents: apt.residentIds.length,
+              numKeys: 0,
+              parkingSlots: { car: 0, bike: 0 },
+            };
+          })
         );
         setApartments(apartmentsWithDetails);
         const allDevices = apartmentsData.flatMap((apt) => apt.deviceIds);
         const uniqueDevices = await Promise.all(
-            [...new Set(allDevices)].map((id) => deviceService.getDeviceById(id))
+          Array.from(new Set(allDevices)).map((id) => deviceService.getDeviceById(id))
         );
         setDevices(uniqueDevices);
         setError(null);
@@ -169,9 +164,9 @@ const ApartmentDetailsManagement = () => {
           return {
             ...apt,
             vehicles: [
-              ...apt.vehicles,
+              ...(apt.vehicles || []),
               {
-                id: Math.max(...apt.vehicles.map((v) => v.id), 0) + 1,
+                id: Math.max(...(apt.vehicles?.map((v) => v.id) || [0]), 0) + 1,
                 type: newVehicle.type as 'Ô tô' | 'Xe máy',
                 licensePlate: newVehicle.licensePlate!,
                 brand: newVehicle.brand || '',
@@ -204,7 +199,7 @@ const ApartmentDetailsManagement = () => {
         if (apt.id === selectedApartment.id) {
           return {
             ...apt,
-            vehicles: apt.vehicles.map((v) => (v.id === editingVehicle.id ? editingVehicle : v)),
+            vehicles: apt.vehicles?.map((v) => (v.id === editingVehicle.id ? editingVehicle : v)) || [],
           };
         }
         return apt;
@@ -230,7 +225,7 @@ const ApartmentDetailsManagement = () => {
         if (apt.id === selectedApartment.id) {
           return {
             ...apt,
-            vehicles: apt.vehicles.filter((v) => v.id !== selectedVehicle.id),
+            vehicles: apt.vehicles?.filter((v) => v.id !== selectedVehicle.id) || [],
           };
         }
         return apt;
@@ -247,45 +242,35 @@ const ApartmentDetailsManagement = () => {
   const handleCloseAddApartment = () => {
     setAddApartmentDialogOpen(false);
     setNewApartment({
+      name: '',
+      apartmentOwnerId: 0,
+      description: '',
       building: 'S1',
-      apartmentNumber: '',
       floor: 1,
-      ownerName: '',
       numResidents: 1,
       numKeys: 1,
       parkingSlots: { car: 0, bike: 0 },
-      notes: '',
-      apartmentOwnerId: 0,
     });
   };
 
   const handleAddApartment = async () => {
-    if (newApartment.building && newApartment.apartmentNumber) {
+    if (newApartment.name && newApartment.apartmentOwnerId) {
       try {
-        const newApartmentDTO = {
-          name: newApartment.apartmentNumber,
-          apartmentOwnerId: newApartment.apartmentOwnerId || 0,
-          description: newApartment.notes || null,
-        };
-        const createdApartment = await apartmentService.createApartment(newApartmentDTO);
+        const createdApartment = await apartmentService.createApartment(newApartment);
         const owner = newApartment.apartmentOwnerId
-            ? await managementResidentService.getResidentById(newApartment.apartmentOwnerId)
-            : { name: 'Không xác định' };
+          ? await managementResidentService.getResidentById(newApartment.apartmentOwnerId)
+          : { name: 'Không xác định' };
         setApartments([
           ...apartments,
           {
-            id: createdApartment.id,
-            apartmentNumber: createdApartment.name,
+            ...createdApartment,
             building: newApartment.building as 'S1' | 'S2',
-            floor: newApartment.floor || 1,
+            floor: newApartment.floor,
             ownerName: owner.name,
             vehicles: [],
-            numResidents: newApartment.numResidents || 1,
-            numKeys: newApartment.numKeys || 1,
+            numResidents: newApartment.numResidents,
+            numKeys: newApartment.numKeys,
             parkingSlots: newApartment.parkingSlots,
-            notes: newApartment.notes || '',
-            apartmentOwnerId: createdApartment.apartmentOwnerId,
-            deviceIds: [],
           },
         ]);
         handleCloseAddApartment();
@@ -306,7 +291,7 @@ const ApartmentDetailsManagement = () => {
     setAddDeviceDialogOpen(false);
     setNewDevice({
       name: '',
-      deviceType: '',
+      type: '',
       status: 'ACTIVE',
       maintenanceAt: new Date().toISOString().split('T')[0],
       apartmentId: 0,
@@ -314,16 +299,16 @@ const ApartmentDetailsManagement = () => {
   };
 
   const handleAddDevice = async () => {
-    if (selectedApartment && newDevice.name && newDevice.deviceType) {
+    if (selectedApartment && newDevice.name && newDevice.type) {
       try {
         const createdDevice = await deviceService.createDevice(newDevice);
         setDevices([...devices, createdDevice]);
         setApartments(
-            apartments.map((apt) =>
-                apt.id === selectedApartment.id
-                    ? { ...apt, deviceIds: [...apt.deviceIds, createdDevice.id] }
-                    : apt
-            )
+          apartments.map((apt) =>
+            apt.id === selectedApartment.id
+              ? { ...apt, deviceIds: [...apt.deviceIds, createdDevice.id] }
+              : apt
+          )
         );
         handleCloseAddDevice();
       } catch (err) {
@@ -332,7 +317,8 @@ const ApartmentDetailsManagement = () => {
     }
   };
 
-  const getVehicleSummary = (vehicles: Vehicle[]) => {
+  const getVehicleSummary = (vehicles: Vehicle[] | undefined) => {
+    if (!vehicles) return '0 xe';
     const cars = vehicles.filter((v) => v.type === 'Ô tô').length;
     const bikes = vehicles.filter((v) => v.type === 'Xe máy').length;
     return `${cars} ô tô, ${bikes} xe máy`;
@@ -340,123 +326,123 @@ const ApartmentDetailsManagement = () => {
 
   if (loading) {
     return (
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-          <CircularProgress />
-        </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <CircularProgress />
+      </Box>
     );
   }
 
   if (error) {
     return (
-        <Box sx={{ p: 3, bgcolor: '#F5F7FA', minHeight: '100vh' }}>
-          <Typography color="error">{error}</Typography>
-        </Box>
+      <Box sx={{ p: 3, bgcolor: '#F5F7FA', minHeight: '100vh' }}>
+        <Typography color="error">{error}</Typography>
+      </Box>
     );
   }
 
   return (
-      <Box sx={{ p: 3, bgcolor: '#F5F7FA', minHeight: '100vh' }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h5" fontWeight="bold">
-            Quản lý thông tin căn hộ
-          </Typography>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenAddApartment}>
-            Thêm căn hộ
-          </Button>
-        </Box>
-
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Căn hộ</TableCell>
-                <TableCell>Chủ căn hộ</TableCell>
-                <TableCell>Số lượng xe</TableCell>
-                <TableCell>Ghi chú</TableCell>
-                <TableCell align="right">Thao tác</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {apartments.map((apartment) => (
-                  <TableRow key={apartment.id}>
-                    <TableCell>
-                      {apartment.building} - {apartment.apartmentNumber}
-                    </TableCell>
-                    <TableCell>{apartment.ownerName}</TableCell>
-                    <TableCell>{getVehicleSummary(apartment.vehicles)}</TableCell>
-                    <TableCell>{apartment.notes}</TableCell>
-                    <TableCell align="right">
-                      <IconButton color="primary" onClick={() => handleOpenDetails(apartment)}>
-                        <VisibilityIcon />
-                      </IconButton>
-                      <IconButton color="error" onClick={() => handleOpenDelete(apartment)}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        <ApartmentDetailsDialog
-            open={detailsOpen}
-            apartment={selectedApartment}
-            devices={devices.filter((d) => selectedApartment?.deviceIds.includes(d.id))}
-            onClose={handleCloseDetails}
-            onSave={handleCloseDetails} // Cần API để lưu thay đổi
-            onAddVehicle={handleOpenAddVehicle}
-            onEditVehicle={handleOpenEditVehicle}
-            onDeleteVehicle={handleOpenDeleteVehicle}
-            onAddDevice={handleOpenAddDevice}
-        />
-
-        <AddApartmentDialog
-            open={addApartmentDialogOpen}
-            newApartment={newApartment}
-            setNewApartment={setNewApartment}
-            onClose={handleCloseAddApartment}
-            onAdd={handleAddApartment}
-        />
-
-        <DeleteApartmentDialog
-            open={deleteDialogOpen}
-            apartment={selectedApartment}
-            onClose={handleCloseDelete}
-            onDelete={handleDelete}
-        />
-
-        <AddVehicleDialog
-            open={addVehicleDialogOpen}
-            newVehicle={newVehicle}
-            setNewVehicle={setNewVehicle}
-            onClose={handleCloseAddVehicle}
-            onAdd={handleAddVehicle}
-        />
-
-        <EditVehicleDialog
-            open={editVehicleDialogOpen}
-            vehicle={editingVehicle}
-            setVehicle={setEditingVehicle}
-            onClose={handleCloseEditVehicle}
-            onSave={handleUpdateVehicle}
-        />
-
-        <DeleteVehicleDialog
-            open={deleteVehicleDialogOpen}
-            vehicle={selectedVehicle}
-            onClose={handleCloseDeleteVehicle}
-            onDelete={handleDeleteVehicle}
-        />
-
-        <AddDeviceDialog
-            open={addDeviceDialogOpen}
-            newDevice={newDevice}
-            setNewDevice={setNewDevice}
-            onClose={handleCloseAddDevice}
-            onAdd={handleAddDevice}
-        />
+    <Box sx={{ p: 3, bgcolor: '#F5F7FA', minHeight: '100vh' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h5" fontWeight="bold">
+          Quản lý thông tin căn hộ
+        </Typography>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenAddApartment}>
+          Thêm căn hộ
+        </Button>
       </Box>
+
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Căn hộ</TableCell>
+              <TableCell>Chủ căn hộ</TableCell>
+              <TableCell>Số lượng xe</TableCell>
+              <TableCell>Ghi chú</TableCell>
+              <TableCell align="right">Thao tác</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {apartments.map((apartment) => (
+              <TableRow key={apartment.id}>
+                <TableCell>
+                  {apartment.building} - {apartment.name}
+                </TableCell>
+                <TableCell>{apartment.ownerName}</TableCell>
+                <TableCell>{getVehicleSummary(apartment.vehicles)}</TableCell>
+                <TableCell>{apartment.description}</TableCell>
+                <TableCell align="right">
+                  <IconButton color="primary" onClick={() => handleOpenDetails(apartment)}>
+                    <VisibilityIcon />
+                  </IconButton>
+                  <IconButton color="error" onClick={() => handleOpenDelete(apartment)}>
+                    <DeleteIcon />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <ApartmentDetailsDialog
+        open={detailsOpen}
+        apartment={selectedApartment}
+        devices={devices.filter((d) => selectedApartment?.deviceIds.includes(d.id))}
+        onClose={handleCloseDetails}
+        onSave={handleCloseDetails}
+        onAddVehicle={handleOpenAddVehicle}
+        onEditVehicle={handleOpenEditVehicle}
+        onDeleteVehicle={handleOpenDeleteVehicle}
+        onAddDevice={handleOpenAddDevice}
+      />
+
+      <AddApartmentDialog
+        open={addApartmentDialogOpen}
+        newApartment={newApartment}
+        setNewApartment={setNewApartment}
+        onClose={handleCloseAddApartment}
+        onAdd={handleAddApartment}
+      />
+
+      <DeleteApartmentDialog
+        open={deleteDialogOpen}
+        apartment={selectedApartment}
+        onClose={handleCloseDelete}
+        onDelete={handleDelete}
+      />
+
+      <AddVehicleDialog
+        open={addVehicleDialogOpen}
+        newVehicle={newVehicle}
+        setNewVehicle={setNewVehicle}
+        onClose={handleCloseAddVehicle}
+        onAdd={handleAddVehicle}
+      />
+
+      <EditVehicleDialog
+        open={editVehicleDialogOpen}
+        vehicle={editingVehicle}
+        setVehicle={setEditingVehicle}
+        onClose={handleCloseEditVehicle}
+        onSave={handleUpdateVehicle}
+      />
+
+      <DeleteVehicleDialog
+        open={deleteVehicleDialogOpen}
+        vehicle={selectedVehicle}
+        onClose={handleCloseDeleteVehicle}
+        onDelete={handleDeleteVehicle}
+      />
+
+      <AddDeviceDialog
+        open={addDeviceDialogOpen}
+        newDevice={newDevice}
+        setNewDevice={setNewDevice}
+        onClose={handleCloseAddDevice}
+        onAdd={handleAddDevice}
+      />
+    </Box>
   );
 };
 
