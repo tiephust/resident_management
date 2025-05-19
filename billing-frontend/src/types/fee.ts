@@ -1,18 +1,24 @@
 export interface FeeDTO {
-    id: string;
-    residentId: string;
-    residentName: string;
-    feeTypeId: string;
-    feeTypeName: string;
+    id: number;
+    apartmentId: number;
+    feeTypeId: number;
     amount: number;
     dueDate: string;
-    paymentDate?: string;
+    paymentDate: string | null;
     status: 'PAID' | 'UNPAID' | 'OVERDUE';
-    description?: string;
-    stripePaymentIntentId?: string;
-    stripePaymentStatus?: string;
+    description: string | null;
+    stripePaymentIntentId: string | null;
+    stripePaymentStatus: string | null;
     createdAt: string;
     updatedAt: string;
+}
+
+export interface NewFeeDTO {
+    apartmentId: number;
+    feeTypeId: number;
+    amount: number;
+    dueDate: string;
+    description?: string;
 }
 
 export interface PaymentRequestDTO {

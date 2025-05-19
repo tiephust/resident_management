@@ -44,10 +44,11 @@ export interface NewResident {
 
 export interface Fee {
     id: number;
-    resident: {
+    apartment: {
         id: number;
         name: string;
         building?: 's1' | 's2';
+        ownerName: string;
     };
     feeType: {
         id: number;
@@ -66,19 +67,15 @@ export interface Fee {
 }
 
 export interface NewFee {
-    resident: {
-        id: number;
-    };
-    feeType: {
-        id: number;
-    };
+    apartmentId: number;
+    feeTypeId: number;
     amount: number;
     dueDate: string | null;
     description: string | null;
 }
 
 export interface FeeFilter {
-    residentId?: number;
+    apartmentId?: number;
     feeTypeId?: number;
     status?: 'PAID' | 'UNPAID' | 'OVERDUE';
     startDate?: string;

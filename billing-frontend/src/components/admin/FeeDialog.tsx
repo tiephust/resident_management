@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import { FeeDTO } from '../../types/fee';
 import { managementFeeTypeService } from '../../services/admin/ManagementFeeTypeService';
-import { managementApartmentService } from '../../services/admin/managementApartmentService'; // Giả định service này tồn tại
+import { managementApartmentService } from '../../services/admin/ManagementApartmentService';
 
 interface FeeDialogProps {
     open: boolean;
@@ -28,13 +28,13 @@ interface FeeDialogProps {
 }
 
 const FeeDialog: React.FC<FeeDialogProps> = ({
-                                                 open,
-                                                 fee,
-                                                 setFee,
-                                                 onClose,
-                                                 onSave,
-                                             }) => {
-    const [apartments, setApartments] = useState<Array<{ id: number; name: string }>>([]);
+    open,
+    fee,
+    setFee,
+    onClose,
+    onSave,
+}) => {
+    const [apartments, setApartments] = useState<Array<{ id: number; name: string; building: string }>>([]);
     const [feeTypes, setFeeTypes] = useState<Array<{ id: number; name: string; pricePerUnit: number }>>([]);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -45,7 +45,7 @@ const FeeDialog: React.FC<FeeDialogProps> = ({
                 setLoading(true);
                 setError(null);
                 const [apartmentsData, feeTypesData] = await Promise.all([
-                    managementApartmentService.getAllApartments(), // Giả định service này trả về danh sách apartments
+                    managementApartmentService.getAllApartments(),
                     managementFeeTypeService.getAllFeeTypes(),
                 ]);
                 setApartments(Array.isArray(apartmentsData) ? apartmentsData : []);
@@ -103,7 +103,6 @@ const FeeDialog: React.FC<FeeDialogProps> = ({
         }
     };
 
-    // Kiểm tra xem fee có id hay không (tức là chỉnh sửa hay thêm mới)
     const hasId = fee && fee.id;
 
     return (
@@ -139,7 +138,7 @@ const FeeDialog: React.FC<FeeDialogProps> = ({
                                     {Array.isArray(apartments) && apartments.length > 0 ? (
                                         apartments.map((apartment) => (
                                             <MenuItem key={apartment.id} value={apartment.id}>
-                                                {apartment.name}
+                                                {apartment.building} - {apartment.name}
                                             </MenuItem>
                                         ))
                                     ) : (
