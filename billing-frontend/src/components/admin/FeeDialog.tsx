@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import { FeeDTO } from '../../types/fee';
 import { managementFeeTypeService } from '../../services/admin/ManagementFeeTypeService';
-import { managementApartmentService } from '../../services/admin/ManagementApartmentService';
+import { managementApartmentService } from '../../services/admin/ManageApartmentService';
 
 interface FeeDialogProps {
     open: boolean;

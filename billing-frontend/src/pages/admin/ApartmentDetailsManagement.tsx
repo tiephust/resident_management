@@ -18,30 +18,24 @@ import ApartmentDetailsDialog from '../../components/admin/ApartmentDetailsDialo
 import AddApartmentDialog from '../../components/admin/apartment/AddApartmentDialog';
 import DeleteApartmentDialog from '../../components/admin/apartment/DeleteApartmentDialog';
 import DeviceDialog from '../../components/admin/DeviceDialog';
-import { ApartmentDetail, NewApartment } from '../../types/admin/ApartmentManagementType';
-import { Device, NewDevice } from '../../types/admin/DeviceManagementType';
-import { apartmentService } from '../../services/admin/apartmentService';
-import { managementResidentService } from '../../services/admin/ManagementResidentService';
+import { ApartmentDTO, NewApartmentDTO } from '../../types/admin/ApartmentServiceType';
+import { Device, NewDevice, Apartment } from '../../types/admin/DeviceManagementType';
+import { managementApartmentService } from '../../services/admin/ManageApartmentService';
 import { deviceService } from '../../services/admin/deviceService';
 
 const ApartmentDetailsManagement = () => {
-  const [apartments, setApartments] = useState<ApartmentDetail[]>([]);
+  const [apartments, setApartments] = useState<ApartmentDTO[]>([]);
   const [devices, setDevices] = useState<Device[]>([]);
-  const [selectedApartment, setSelectedApartment] = useState<ApartmentDetail | null>(null);
+  const [selectedApartment, setSelectedApartment] = useState<ApartmentDTO | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deviceDialogOpen, setDeviceDialogOpen] = useState(false);
   const [editingDevice, setEditingDevice] = useState<Device | NewDevice | null>(null);
   const [addApartmentDialogOpen, setAddApartmentDialogOpen] = useState(false);
-  const [newApartment, setNewApartment] = useState<NewApartment>({
+  const [newApartment, setNewApartment] = useState<NewApartmentDTO>({
     name: '',
     apartmentOwnerId: 0,
     description: '',
-    building: 'S1',
-    floor: 1,
-    numResidents: 1,
-    numKeys: 1,
-    parkingSlots: { car: 0, bike: 0 },
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,24 +44,8 @@ const ApartmentDetailsManagement = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const apartmentsData = await apartmentService.getAllApartments();
-        const apartmentsWithDetails = await Promise.all(
-          apartmentsData.map(async (apt) => {
-            const owner = apt.apartmentOwnerId
-              ? await managementResidentService.getResidentById(apt.apartmentOwnerId)
-              : { name: 'Không xác định' };
-            return {
-              ...apt,
-              building: 'S1' as const,
-              floor: 1,
-              ownerName: owner.name,
-              numResidents: apt.residentIds.length,
-              numKeys: 0,
-              parkingSlots: { car: 0, bike: 0 },
-            };
-          })
-        );
-        setApartments(apartmentsWithDetails);
+        const apartmentsData = await managementApartmentService.getAllApartments();
+        setApartments(apartmentsData);
         const allDevices = apartmentsData.flatMap((apt) => apt.deviceIds);
         const uniqueDevices = await Promise.all(
           Array.from(new Set(allDevices)).map((id) => deviceService.getDeviceById(id))
@@ -84,7 +62,7 @@ const ApartmentDetailsManagement = () => {
     fetchData();
   }, []);
 
-  const handleOpenDetails = (apartment: ApartmentDetail) => {
+  const handleOpenDetails = (apartment: ApartmentDTO) => {
     setSelectedApartment(apartment);
     setDevices(apartments.find((apt) => apt.id === apartment.id)?.deviceIds.map((id) => devices.find((d) => d.id === id)!).filter(Boolean) || []);
     setDetailsOpen(true);
@@ -95,7 +73,7 @@ const ApartmentDetailsManagement = () => {
     setSelectedApartment(null);
   };
 
-  const handleOpenDelete = (apartment: ApartmentDetail) => {
+  const handleOpenDelete = (apartment: ApartmentDTO) => {
     setSelectedApartment(apartment);
     setDeleteDialogOpen(true);
   };
@@ -108,7 +86,7 @@ const ApartmentDetailsManagement = () => {
   const handleDelete = async () => {
     if (selectedApartment) {
       try {
-        await apartmentService.deleteApartment(selectedApartment.id);
+        await managementApartmentService.deleteApartment(selectedApartment.id);
         setApartments(apartments.filter((apt) => apt.id !== selectedApartment.id));
         handleCloseDelete();
       } catch (err) {
@@ -127,33 +105,14 @@ const ApartmentDetailsManagement = () => {
       name: '',
       apartmentOwnerId: 0,
       description: '',
-      building: 'S1',
-      floor: 1,
-      numResidents: 1,
-      numKeys: 1,
-      parkingSlots: { car: 0, bike: 0 },
     });
   };
 
   const handleAddApartment = async () => {
     if (newApartment.name && newApartment.apartmentOwnerId) {
       try {
-        const createdApartment = await apartmentService.createApartment(newApartment);
-        const owner = newApartment.apartmentOwnerId
-          ? await managementResidentService.getResidentById(newApartment.apartmentOwnerId)
-          : { name: 'Không xác định' };
-        setApartments([
-          ...apartments,
-          {
-            ...createdApartment,
-            building: newApartment.building as 'S1' | 'S2',
-            floor: newApartment.floor,
-            ownerName: owner.name,
-            numResidents: newApartment.numResidents,
-            numKeys: newApartment.numKeys,
-            parkingSlots: newApartment.parkingSlots,
-          },
-        ]);
+        const createdApartment = await managementApartmentService.createApartment(newApartment);
+        setApartments([...apartments, createdApartment]);
         handleCloseAddApartment();
       } catch (err) {
         setError('Lỗi khi thêm căn hộ. Vui lòng thử lại.');
@@ -258,10 +217,8 @@ const ApartmentDetailsManagement = () => {
           <TableBody>
             {apartments.map((apartment) => (
               <TableRow key={apartment.id}>
-                <TableCell>
-                  {apartment.building} - {apartment.name}
-                </TableCell>
-                <TableCell>{apartment.ownerName}</TableCell>
+                <TableCell>{apartment.name}</TableCell>
+                <TableCell>{apartment.apartmentOwnerId}</TableCell>
                 <TableCell>{apartment.description}</TableCell>
                 <TableCell align="right">
                   <IconButton color="primary" onClick={() => handleOpenDetails(apartment)}>
@@ -309,6 +266,17 @@ const ApartmentDetailsManagement = () => {
         setDevice={setEditingDevice}
         onClose={handleCloseDeviceDialog}
         onSave={handleSaveDevice}
+        apartments={apartments.map(apt => ({
+          id: apt.id,
+          name: apt.name,
+          description: apt.description || '',
+          apartmentOwnerId: apt.apartmentOwnerId,
+          feeIds: apt.feeIds,
+          residentIds: apt.residentIds,
+          deviceIds: apt.deviceIds,
+          createdAt: apt.createdAt || '', // Xử lý null case
+          updatedAt: apt.updatedAt || ''  // Xử lý null case
+        }))}
       />
     </Box>
   );

@@ -82,7 +82,7 @@ const AdminLayout = () => {
     { text: 'Quản lý loaị phí', icon: <SettingsIcon />, path: '/admin/fee-types' },
     { text: 'Quản lý đóng phí', icon: <PaymentIcon />, path: '/admin/fee-management' },
     { text: 'Quản lý thiết bị', icon: <BuildIcon />, path: '/admin/devices' },
-    { text: 'Thông báo', icon: <NotificationsIcon />, path: '/admin/notifications' },
+    // { text: 'Thông báo', icon: <NotificationsIcon />, path: '/admin/notifications' },
     { text: 'Phản hồi', icon: <FeedbackIcon />, path: '/admin/feedback' },
   ];
 

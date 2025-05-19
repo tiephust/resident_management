@@ -1,8 +1,9 @@
 // services/deviceService.ts
 import axiosInstance from "../axiosInstance";
-import { Device, NewDevice } from '../../types/admin/DeviceManagementType';
+import { Device, NewDevice, Apartment } from '../../types/admin/DeviceManagementType';
 
 const API_URL = 'http://localhost:8080/api/device';
+const APARTMENT_API_URL = 'http://localhost:8080/api/apartment';
 
 export const deviceService = {
     getAllDevices: async (): Promise<Device[]> => {
@@ -60,6 +61,11 @@ export const deviceService = {
             ...d,
             status: mapStatusToFrontend(d.status)
         }));
+    },
+
+    getAllApartments: async (): Promise<Apartment[]> => {
+        const response = await axiosInstance.get(APARTMENT_API_URL);
+        return response.data;
     }
 };
 

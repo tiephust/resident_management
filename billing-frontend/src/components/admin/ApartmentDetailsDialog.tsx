@@ -22,12 +22,12 @@ import {
     Chip,
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { ApartmentDetail } from '../../types/admin/ApartmentManagementType';
+import { ApartmentDTO } from '../../types/admin/ApartmentServiceType';
 import { Device } from '../../types/admin/DeviceManagementType';
 
 interface ApartmentDetailsDialogProps {
     open: boolean;
-    apartment: ApartmentDetail | null;
+    apartment: ApartmentDTO | null;
     devices: Device[];
     onClose: () => void;
     onSave: () => void;
@@ -74,10 +74,21 @@ const ApartmentDetailsDialog: React.FC<ApartmentDetailsDialogProps> = ({
         }
     };
 
+    const formatDate = (dateString: string | null | undefined) => {
+        if (!dateString) return '-';
+        return new Date(dateString).toLocaleString('vi-VN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
     return (
         <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
             <DialogTitle>
-                Chi tiết căn hộ {apartment?.building} - {apartment?.name}
+                Chi tiết căn hộ {apartment?.name}
             </DialogTitle>
             <DialogContent>
                 <Tabs value={tabValue} onChange={handleTabChange} sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
@@ -88,62 +99,35 @@ const ApartmentDetailsDialog: React.FC<ApartmentDetailsDialogProps> = ({
 
                 {tabValue === 0 && (
                     <Grid container spacing={2} sx={{ mt: 1 }}>
-                        <Grid item xs={6}>
+                        <Grid item xs={12}>
                             <TextField
-                                label="Số căn hộ"
+                                label="Tên căn hộ"
                                 fullWidth
                                 value={apartment?.name}
                                 disabled
                             />
                         </Grid>
-                        <Grid item xs={6}>
+                        <Grid item xs={12}>
                             <TextField
-                                label="Tòa nhà"
+                                label="ID chủ căn hộ"
                                 fullWidth
-                                value={apartment?.building}
+                                value={apartment?.apartmentOwnerId}
                                 disabled
                             />
                         </Grid>
-                        <Grid item xs={4}>
+                        <Grid item xs={12}>
                             <TextField
-                                label="Tầng"
+                                label="Ngày tạo"
                                 fullWidth
-                                value={apartment?.floor}
+                                value={formatDate(apartment?.createdAt)}
                                 disabled
                             />
                         </Grid>
-                        <Grid item xs={8}>
+                        <Grid item xs={12}>
                             <TextField
-                                label="Chủ căn hộ"
+                                label="Ngày cập nhật"
                                 fullWidth
-                                value={apartment?.ownerName}
-                                disabled
-                            />
-                        </Grid>
-                        <Grid item xs={4}>
-                            <TextField
-                                label="Số người ở"
-                                fullWidth
-                                type="number"
-                                value={apartment?.numResidents}
-                                disabled
-                            />
-                        </Grid>
-                        <Grid item xs={4}>
-                            <TextField
-                                label="Số chìa khóa"
-                                fullWidth
-                                type="number"
-                                value={apartment?.numKeys}
-                                disabled
-                            />
-                        </Grid>
-                        <Grid item xs={4}>
-                            <TextField
-                                label="Số chỗ để xe máy"
-                                fullWidth
-                                type="number"
-                                value={apartment?.parkingSlots?.bike}
+                                value={formatDate(apartment?.updatedAt)}
                                 disabled
                             />
                         </Grid>
@@ -192,7 +176,7 @@ const ApartmentDetailsDialog: React.FC<ApartmentDetailsDialogProps> = ({
                                                 />
                                             </TableCell>
                                             <TableCell>{device.numberCard || '-'}</TableCell>
-                                            <TableCell>{device.maintenanceAt}</TableCell>
+                                            <TableCell>{formatDate(device.maintenanceAt)}</TableCell>
                                             <TableCell align="right">
                                                 <IconButton
                                                     size="small"

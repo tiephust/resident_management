@@ -27,7 +27,7 @@ import FeeDialog from '../../components/admin/FeeDialog';
 import { FeeDTO, NewFeeDTO } from '../../types/fee';
 import { managementFeeService } from '../../services/admin/ManagementFeeService';
 import { managementFeeTypeService } from '../../services/admin/ManagementFeeTypeService';
-import { managementApartmentService } from '../../services/admin/ManagementApartmentService';
+import { managementApartmentService } from '../../services/admin/ManageApartmentService';
 
 interface FeeRecord {
   id: number;

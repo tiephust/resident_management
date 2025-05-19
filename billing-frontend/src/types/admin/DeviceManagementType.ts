@@ -1,8 +1,21 @@
 // types/admin/DeviceManagementType.ts
+export interface Apartment {
+    id: number;
+    name: string;
+    description: string;
+    apartmentOwnerId: number;
+    feeIds: number[];
+    residentIds: number[];
+    deviceIds: number[];
+    createdAt: string | null;  // Thêm | null
+    updatedAt: string | null;  // Thêm | null
+}
+
 export interface Device {
     id: number;
     name: string;
     apartmentId?: number;
+    apartment?: Apartment;
     type: string;
     numberCard?: string;
     description?: string;
@@ -28,4 +41,5 @@ export interface DeviceDialogProps {
     setDevice: React.Dispatch<React.SetStateAction<Device | NewDevice | null>>;
     onClose: () => void;
     onSave: () => void;
+    apartments: Apartment[];
 }

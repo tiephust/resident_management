@@ -15,12 +15,13 @@ import {
 import { DeviceDialogProps } from '../../types/admin/DeviceManagementType';
 
 const DeviceDialog: React.FC<DeviceDialogProps> = ({
-                                                       open,
-                                                       device,
-                                                       setDevice,
-                                                       onClose,
-                                                       onSave,
-                                                   }) => {
+    open,
+    device,
+    setDevice,
+    onClose,
+    onSave,
+    apartments,
+}) => {
     const statusOptions = [
         { value: 'ACTIVE', label: 'Hoạt động' },
         { value: 'MAINTENANCE', label: 'Bảo trì' },
@@ -43,6 +44,16 @@ const DeviceDialog: React.FC<DeviceDialogProps> = ({
             hour: '2-digit',
             minute: '2-digit'
         });
+    };
+
+    const getApartmentLabel = (apartmentId?: number) => {
+        if (!apartmentId) return '';
+        const apartment = apartments.find(a => a.id === apartmentId);
+        if (!apartment) return '';
+
+        const residentCount = apartment.residentIds.length;
+        const deviceCount = apartment.deviceIds.length;
+        return `${apartment.name} (${residentCount} cư dân, ${deviceCount} thiết bị)`;
     };
 
     // Kiểm tra xem device có id hay không (tức là Device, không phải NewDevice)
@@ -81,19 +92,30 @@ const DeviceDialog: React.FC<DeviceDialogProps> = ({
                             device && setDevice({ ...device, numberCard: e.target.value })
                         }
                     />
-                    <TextField
-                        label="ID căn hộ"
-                        fullWidth
-                        type="number"
-                        value={device?.apartmentId || ''}
-                        onChange={(e) =>
-                            device &&
-                            setDevice({
-                                ...device,
-                                apartmentId: e.target.value ? Number(e.target.value) : undefined,
-                            })
-                        }
-                    />
+                    <FormControl fullWidth>
+                        <InputLabel>Căn hộ</InputLabel>
+                        <Select
+                            value={device?.apartmentId || ''}
+                            label="Căn hộ"
+                            onChange={(e) =>
+                                device &&
+                                setDevice({
+                                    ...device,
+                                    apartmentId: e.target.value ? Number(e.target.value) : undefined,
+                                })
+                            }
+                            // disabled={hasId && device?.apartmentId !== undefined}
+                        >
+                            <MenuItem value="">
+                                <em>Không chọn</em>
+                            </MenuItem>
+                            {apartments.map((apartment) => (
+                                <MenuItem key={apartment.id} value={apartment.id}>
+                                    {getApartmentLabel(apartment.id)}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
                     <FormControl fullWidth>
                         <InputLabel>Trạng thái</InputLabel>
                         <Select

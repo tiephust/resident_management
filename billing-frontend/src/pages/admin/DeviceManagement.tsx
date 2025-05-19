@@ -18,11 +18,12 @@ import {
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import DeviceDialog from '../../components/admin/DeviceDialog';
-import { Device, NewDevice } from '../../types/admin/DeviceManagementType';
+import { Device, NewDevice, Apartment } from '../../types/admin/DeviceManagementType';
 import { deviceService } from '../../services/admin/deviceService';
 
 const DeviceManagement = () => {
   const [devices, setDevices] = useState<Device[]>([]);
+  const [apartments, setApartments] = useState<Apartment[]>([]);
   const [open, setOpen] = useState(false);
   const [editingDevice, setEditingDevice] = useState<Device | NewDevice | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -30,6 +31,7 @@ const DeviceManagement = () => {
 
   useEffect(() => {
     loadDevices();
+    loadApartments();
   }, []);
 
   const loadDevices = async () => {
@@ -46,6 +48,20 @@ const DeviceManagement = () => {
     }
   };
 
+  const loadApartments = async () => {
+    try {
+      const data = await deviceService.getAllApartments();
+      setApartments(data);
+    } catch (err: any) {
+      if (err.response?.status === 401) {
+        window.location.href = '/login';
+      } else {
+        setError('Lỗi khi tải danh sách căn hộ');
+        console.error('Error loading apartments:', err);
+      }
+    }
+  };
+
   const formatDateForDisplay = (dateString: string) => {
     if (!dateString) return '-';
     const date = new Date(dateString);
@@ -56,6 +72,12 @@ const DeviceManagement = () => {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const getApartmentLabel = (apartmentId?: number) => {
+    if (!apartmentId) return '-';
+    const apartment = apartments.find(a => a.id === apartmentId);
+    return apartment ? apartment.name : '-';
   };
 
   const handleOpen = (device?: Device) => {
@@ -169,6 +191,7 @@ const DeviceManagement = () => {
                 <TableCell>Loại</TableCell>
                 <TableCell>Trạng thái</TableCell>
                 <TableCell>Số thẻ</TableCell>
+                <TableCell>Căn hộ</TableCell>
                 <TableCell>Bảo trì gần nhất</TableCell>
                 <TableCell align="right">Thao tác</TableCell>
               </TableRow>
@@ -188,6 +211,7 @@ const DeviceManagement = () => {
                     />
                   </TableCell>
                   <TableCell>{device.numberCard || '-'}</TableCell>
+                  <TableCell>{getApartmentLabel(device.apartmentId)}</TableCell>
                   <TableCell>{formatDateForDisplay(device.maintenanceAt)}</TableCell>
                   <TableCell align="right">
                     <IconButton onClick={() => handleOpen(device)} color="primary">
@@ -210,6 +234,7 @@ const DeviceManagement = () => {
         setDevice={setEditingDevice}
         onClose={handleClose}
         onSave={handleSave}
+        apartments={apartments}
       />
 
       <Snackbar
