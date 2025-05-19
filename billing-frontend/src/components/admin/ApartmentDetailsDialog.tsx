@@ -24,27 +24,36 @@ import {
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { ApartmentDTO } from '../../types/admin/ApartmentServiceType';
 import { Device } from '../../types/admin/DeviceManagementType';
+import { Fee } from '../../types/admin/FeeManagementType';
 
 interface ApartmentDetailsDialogProps {
     open: boolean;
     apartment: ApartmentDTO | null;
     devices: Device[];
+    fees: Fee[];
     onClose: () => void;
     onSave: () => void;
     onAddDevice: () => void;
     onEditDevice: (device: Device) => void;
     onDeleteDevice: (device: Device) => void;
+    onAddFee: () => void;
+    onEditFee: (fee: Fee) => void;
+    onDeleteFee: (fee: Fee) => void;
 }
 
 const ApartmentDetailsDialog: React.FC<ApartmentDetailsDialogProps> = ({
     open,
     apartment,
     devices,
+    fees,
     onClose,
     onSave,
     onAddDevice,
     onEditDevice,
     onDeleteDevice,
+    onAddFee,
+    onEditFee,
+    onDeleteFee,
 }) => {
     const [tabValue, setTabValue] = useState(0);
 
@@ -74,6 +83,28 @@ const ApartmentDetailsDialog: React.FC<ApartmentDetailsDialogProps> = ({
         }
     };
 
+    const getFeeStatusLabel = (status: string) => {
+        switch (status) {
+            case 'PAID': return 'Đã đóng';
+            case 'UNPAID': return 'Chưa đóng';
+            case 'OVERDUE': return 'Quá hạn';
+            default: return 'Chưa đóng';
+        }
+    };
+
+    const getFeeStatusColor = (status: string) => {
+        switch (status) {
+            case 'PAID':
+                return { bg: '#E8F5E9', color: '#2E7D32' };
+            case 'UNPAID':
+                return { bg: '#FFF3E0', color: '#E65100' };
+            case 'OVERDUE':
+                return { bg: '#FFEBEE', color: '#C62828' };
+            default:
+                return { bg: '#FFF3E0', color: '#E65100' };
+        }
+    };
+
     const formatDate = (dateString: string | null | undefined) => {
         if (!dateString) return '-';
         return new Date(dateString).toLocaleString('vi-VN', {
@@ -85,6 +116,13 @@ const ApartmentDetailsDialog: React.FC<ApartmentDetailsDialogProps> = ({
         });
     };
 
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND',
+        }).format(amount);
+    };
+
     return (
         <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
             <DialogTitle>
@@ -94,6 +132,7 @@ const ApartmentDetailsDialog: React.FC<ApartmentDetailsDialogProps> = ({
                 <Tabs value={tabValue} onChange={handleTabChange} sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
                     <Tab label="Thông tin cơ bản" />
                     <Tab label="Thiết bị" />
+                    <Tab label="Phí" />
                     <Tab label="Ghi chú" />
                 </Tabs>
 
@@ -202,6 +241,73 @@ const ApartmentDetailsDialog: React.FC<ApartmentDetailsDialogProps> = ({
                 )}
 
                 {tabValue === 2 && (
+                    <Box sx={{ mt: 2 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                            <Typography variant="subtitle1" fontWeight="bold">
+                                Danh sách phí
+                            </Typography>
+                            <Button
+                                startIcon={<AddIcon />}
+                                variant="outlined"
+                                size="small"
+                                onClick={onAddFee}
+                            >
+                                Thêm phí
+                            </Button>
+                        </Box>
+                        <TableContainer component={Paper} variant="outlined">
+                            <Table size="small">
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell>Loại phí</TableCell>
+                                        <TableCell>Số tiền</TableCell>
+                                        <TableCell>Hạn đóng</TableCell>
+                                        <TableCell>Ngày đóng</TableCell>
+                                        <TableCell>Trạng thái</TableCell>
+                                        <TableCell align="right">Thao tác</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {fees.map((fee) => (
+                                        <TableRow key={fee.id}>
+                                            <TableCell>{fee.feeTypeId}</TableCell>
+                                            <TableCell>{formatCurrency(fee.amount)}</TableCell>
+                                            <TableCell>{formatDate(fee.dueDate)}</TableCell>
+                                            <TableCell>{formatDate(fee.paymentDate)}</TableCell>
+                                            <TableCell>
+                                                <Chip
+                                                    label={getFeeStatusLabel(fee.status)}
+                                                    sx={{
+                                                        bgcolor: getFeeStatusColor(fee.status).bg,
+                                                        color: getFeeStatusColor(fee.status).color,
+                                                    }}
+                                                />
+                                            </TableCell>
+                                            <TableCell align="right">
+                                                <IconButton
+                                                    size="small"
+                                                    color="primary"
+                                                    onClick={() => onEditFee(fee)}
+                                                >
+                                                    <EditIcon />
+                                                </IconButton>
+                                                <IconButton
+                                                    size="small"
+                                                    color="error"
+                                                    onClick={() => onDeleteFee(fee)}
+                                                >
+                                                    <DeleteIcon />
+                                                </IconButton>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </Box>
+                )}
+
+                {tabValue === 3 && (
                     <TextField
                         label="Ghi chú"
                         fullWidth

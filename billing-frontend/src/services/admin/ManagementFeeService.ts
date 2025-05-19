@@ -26,30 +26,28 @@ export const managementFeeService = {
         await axiosInstance.delete(`/api/fee/${id}`);
     },
 
-    async searchFees(searchTerm: string): Promise<Fee[]> {
-        const response = await axiosInstance.get(`/api/fee/search?searchTerm=${encodeURIComponent(searchTerm)}`);
-        return response.data;
-    },
-
-    async getFeesByFilter(filter: FeeFilter): Promise<Fee[]> {
-        const params = new URLSearchParams();
-        if (filter.residentId) params.append('residentId', filter.residentId.toString());
-        if (filter.feeTypeId) params.append('feeTypeId', filter.feeTypeId.toString());
-        if (filter.status) params.append('status', filter.status);
-        if (filter.startDate) params.append('startDate', filter.startDate);
-        if (filter.endDate) params.append('endDate', filter.endDate);
-
-        const response = await axiosInstance.get(`/api/fee/filter?${params.toString()}`);
-        return response.data;
-    },
-
-    async getFeesByResident(residentId: number): Promise<Fee[]> {
-        const response = await axiosInstance.get(`/api/fee/resident/${residentId}`);
+    async getFeesByApartment(apartmentId: number): Promise<Fee[]> {
+        const response = await axiosInstance.get(`/api/fee/apartment/${apartmentId}`);
         return response.data;
     },
 
     async getFeesByStatus(status: string): Promise<Fee[]> {
         const response = await axiosInstance.get(`/api/fee/status/${status}`);
+        return response.data;
+    },
+
+    async getFeesByFilter(filter: FeeFilter): Promise<Fee[]> {
+        const response = await axiosInstance.get('/api/fee/filter', { params: filter });
+        return response.data;
+    },
+
+    async searchFees(searchTerm: string): Promise<Fee[]> {
+        const response = await axiosInstance.get(`/api/fee/search?searchTerm=${encodeURIComponent(searchTerm)}`);
+        return response.data;
+    },
+
+    async getFeesByResident(residentId: number): Promise<Fee[]> {
+        const response = await axiosInstance.get(`/api/fee/resident/${residentId}`);
         return response.data;
     }
 };

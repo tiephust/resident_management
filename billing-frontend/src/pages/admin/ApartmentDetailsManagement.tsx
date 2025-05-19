@@ -18,19 +18,25 @@ import ApartmentDetailsDialog from '../../components/admin/ApartmentDetailsDialo
 import AddApartmentDialog from '../../components/admin/apartment/AddApartmentDialog';
 import DeleteApartmentDialog from '../../components/admin/apartment/DeleteApartmentDialog';
 import DeviceDialog from '../../components/admin/DeviceDialog';
+import FeeDialog from '../../components/admin/FeeDialog';
 import { ApartmentDTO, NewApartmentDTO } from '../../types/admin/ApartmentServiceType';
-import { Device, NewDevice, Apartment } from '../../types/admin/DeviceManagementType';
+import { Device, NewDevice } from '../../types/admin/DeviceManagementType';
+import { Fee, NewFee } from '../../types/admin/FeeManagementType';
 import { managementApartmentService } from '../../services/admin/ManageApartmentService';
 import { deviceService } from '../../services/admin/deviceService';
+import { managementFeeService } from '../../services/admin/ManagementFeeService';
 
 const ApartmentDetailsManagement = () => {
   const [apartments, setApartments] = useState<ApartmentDTO[]>([]);
   const [devices, setDevices] = useState<Device[]>([]);
+  const [fees, setFees] = useState<Fee[]>([]);
   const [selectedApartment, setSelectedApartment] = useState<ApartmentDTO | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deviceDialogOpen, setDeviceDialogOpen] = useState(false);
+  const [feeDialogOpen, setFeeDialogOpen] = useState(false);
   const [editingDevice, setEditingDevice] = useState<Device | NewDevice | null>(null);
+  const [editingFee, setEditingFee] = useState<Fee | NewFee | null>(null);
   const [addApartmentDialogOpen, setAddApartmentDialogOpen] = useState(false);
   const [newApartment, setNewApartment] = useState<NewApartmentDTO>({
     name: '',
@@ -62,15 +68,22 @@ const ApartmentDetailsManagement = () => {
     fetchData();
   }, []);
 
-  const handleOpenDetails = (apartment: ApartmentDTO) => {
+  const handleOpenDetails = async (apartment: ApartmentDTO) => {
     setSelectedApartment(apartment);
-    setDevices(apartments.find((apt) => apt.id === apartment.id)?.deviceIds.map((id) => devices.find((d) => d.id === id)!).filter(Boolean) || []);
+    const apartmentDevices = await Promise.all(
+      apartment.deviceIds.map((id) => deviceService.getDeviceById(id))
+    );
+    setDevices(apartmentDevices.filter(Boolean));
+    const apartmentFees = await managementFeeService.getFeesByApartment(apartment.id);
+    setFees(apartmentFees);
     setDetailsOpen(true);
   };
 
   const handleCloseDetails = () => {
     setDetailsOpen(false);
     setSelectedApartment(null);
+    setDevices([]);
+    setFees([]);
   };
 
   const handleOpenDelete = (apartment: ApartmentDTO) => {
@@ -131,7 +144,7 @@ const ApartmentDetailsManagement = () => {
         maintenanceAt: new Date().toISOString().split('T')[0],
         description: '',
         numberCard: '',
-        apartmentId: selectedApartment?.id || 0,
+        apartmentId: selectedApartment?.id,
       });
     }
     setDeviceDialogOpen(true);
@@ -154,7 +167,7 @@ const ApartmentDetailsManagement = () => {
         const updatedDevices = await Promise.all(
           selectedApartment.deviceIds.map((id) => deviceService.getDeviceById(id))
         );
-        setDevices(updatedDevices);
+        setDevices(updatedDevices.filter(Boolean));
       }
     } catch (err) {
       setError('Lỗi khi lưu thiết bị. Vui lòng thử lại.');
@@ -170,10 +183,60 @@ const ApartmentDetailsManagement = () => {
             .filter((id) => id !== device.id)
             .map((id) => deviceService.getDeviceById(id))
         );
-        setDevices(updatedDevices);
+        setDevices(updatedDevices.filter(Boolean));
       }
     } catch (err) {
       setError('Lỗi khi xóa thiết bị. Vui lòng thử lại.');
+    }
+  };
+
+  const handleOpenFeeDialog = (fee?: Fee) => {
+    if (fee) {
+      setEditingFee(fee);
+    } else {
+      setEditingFee({
+        apartmentId: selectedApartment?.id || 0,
+        feeTypeId: 0,
+        amount: 0,
+        dueDate: new Date().toISOString().split('T')[0],
+        description: '',
+        status: 'UNPAID'
+      });
+    }
+    setFeeDialogOpen(true);
+  };
+
+  const handleCloseFeeDialog = () => {
+    setFeeDialogOpen(false);
+    setEditingFee(null);
+  };
+
+  const handleSaveFee = async () => {
+    try {
+      if (editingFee && 'id' in editingFee) {
+        await managementFeeService.updateFee(editingFee.id, editingFee as NewFee);
+      } else if (editingFee) {
+        await managementFeeService.createFee(editingFee as NewFee);
+      }
+      handleCloseFeeDialog();
+      if (selectedApartment) {
+        const updatedFees = await managementFeeService.getFeesByApartment(selectedApartment.id);
+        setFees(updatedFees);
+      }
+    } catch (err) {
+      setError('Lỗi khi lưu phí. Vui lòng thử lại.');
+    }
+  };
+
+  const handleDeleteFee = async (fee: Fee) => {
+    try {
+      await managementFeeService.deleteFee(fee.id);
+      if (selectedApartment) {
+        const updatedFees = await managementFeeService.getFeesByApartment(selectedApartment.id);
+        setFees(updatedFees);
+      }
+    } catch (err) {
+      setError('Lỗi khi xóa phí. Vui lòng thử lại.');
     }
   };
 
@@ -238,11 +301,15 @@ const ApartmentDetailsManagement = () => {
         open={detailsOpen}
         apartment={selectedApartment}
         devices={devices}
+        fees={fees}
         onClose={handleCloseDetails}
         onSave={handleCloseDetails}
         onAddDevice={() => handleOpenDeviceDialog()}
         onEditDevice={(device) => handleOpenDeviceDialog(device)}
         onDeleteDevice={handleDeleteDevice}
+        onAddFee={() => handleOpenFeeDialog()}
+        onEditFee={(fee) => handleOpenFeeDialog(fee)}
+        onDeleteFee={handleDeleteFee}
       />
 
       <AddApartmentDialog
@@ -274,9 +341,17 @@ const ApartmentDetailsManagement = () => {
           feeIds: apt.feeIds,
           residentIds: apt.residentIds,
           deviceIds: apt.deviceIds,
-          createdAt: apt.createdAt || '', // Xử lý null case
-          updatedAt: apt.updatedAt || ''  // Xử lý null case
+          createdAt: apt.createdAt || '',
+          updatedAt: apt.updatedAt || ''
         }))}
+      />
+
+      <FeeDialog
+        open={feeDialogOpen}
+        fee={editingFee}
+        setFee={setEditingFee}
+        onClose={handleCloseFeeDialog}
+        onSave={handleSaveFee}
       />
     </Box>
   );
