@@ -21,6 +21,7 @@ export interface Resident {
     deletedAt: string | null;
     bills: any[];
     building?: 's1' | 's2';
+    apartmentId?: number;
 }
 
 export type NewResident = Omit<Resident, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'bills'>;

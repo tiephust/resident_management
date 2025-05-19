@@ -240,6 +240,18 @@ const ApartmentDetailsManagement = () => {
     }
   };
 
+  const handleUpdateApartment = async (updatedApartment: ApartmentDTO) => {
+    try {
+      const result = await managementApartmentService.updateApartment(updatedApartment.id, updatedApartment);
+      setApartments(apartments.map(apt => 
+        apt.id === result.id ? result : apt
+      ));
+      setSelectedApartment(result);
+    } catch (err) {
+      setError('Lỗi khi cập nhật căn hộ. Vui lòng thử lại.');
+    }
+  };
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
@@ -310,6 +322,7 @@ const ApartmentDetailsManagement = () => {
         onAddFee={() => handleOpenFeeDialog()}
         onEditFee={(fee) => handleOpenFeeDialog(fee)}
         onDeleteFee={handleDeleteFee}
+        onUpdateApartment={handleUpdateApartment}
       />
 
       <AddApartmentDialog
