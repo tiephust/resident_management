@@ -2,12 +2,18 @@ package management.resident_management.service;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import management.resident_management.dto.FeeTypeDTO;
+import management.resident_management.dto.NewFeeTypeDTO;
+import management.resident_management.entity.BillingCycle;
 import management.resident_management.entity.FeeType;
+import management.resident_management.mapper.FeeTypeMapper;
 import management.resident_management.repository.FeeTypeRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -18,72 +24,72 @@ public class FeeTypeService {
     @Transactional
     public void init() {
         if (feeTypeRepository.count() == 0) {
-            // Initialize with some default fee types
-            FeeType waterFee = new FeeType();
-            waterFee.setName("Tiền nước");
-            waterFee.setCategory("Dịch vụ cơ bản");
-            waterFee.setUnit("m³");
-            waterFee.setPricePerUnit(15000.0);
-            waterFee.setBillingCycle("Hàng tháng");
-            waterFee.setDescription("Phí sử dụng nước sinh hoạt");
-            waterFee.setIsActive(true);
-            waterFee.setCreatedAt(LocalDateTime.now());
-            waterFee.setUpdatedAt(LocalDateTime.now());
-            feeTypeRepository.save(waterFee);
-
-            FeeType electricityFee = new FeeType();
-            electricityFee.setName("Tiền điện");
-            electricityFee.setCategory("Dịch vụ cơ bản");
-            electricityFee.setUnit("kWh");
-            electricityFee.setPricePerUnit(3500.0);
-            electricityFee.setBillingCycle("Hàng tháng");
-            electricityFee.setDescription("Phí sử dụng điện");
-            electricityFee.setIsActive(true);
-            electricityFee.setCreatedAt(LocalDateTime.now());
-            electricityFee.setUpdatedAt(LocalDateTime.now());
-            feeTypeRepository.save(electricityFee);
+            String[] categories = {"Utilities", "Maintenance", "Service"};
+            String[] units = {"kWh", "m³", "Flat"};
+            BillingCycle[] cycles = {BillingCycle.MONTHLY, BillingCycle.QUARTERLY, BillingCycle.YEARLY};
+            for (int i = 0; i < 5; i++) {
+                FeeType feeType = new FeeType();
+                feeType.setName("Fee Type " + (i + 1));
+                feeType.setCategory(categories[i % categories.length]);
+                feeType.setUnit(units[i % units.length]);
+                feeType.setPricePerUnit(10.0 * (i + 1));
+                feeType.setBillingCycle(cycles[i % cycles.length]);
+                feeType.setDescription("Description for Fee Type " + (i + 1));
+                feeType.setIsActive(true);
+                feeType.setCreatedAt(LocalDateTime.now());
+                feeType.setUpdatedAt(LocalDateTime.now());
+                feeTypeRepository.save(feeType);
+            }
         }
     }
 
-    public List<FeeType> getAllFeeTypes() {
-        return feeTypeRepository.findAll();
+    public List<FeeTypeDTO> getAllFeeTypes() {
+        return feeTypeRepository.findByIsActiveTrue().stream()
+                .map(FeeTypeMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
-    public FeeType getFeeTypeById(Long id) {
-        return feeTypeRepository.findById(id).orElse(null);
+    public FeeTypeDTO getFeeTypeById(Long id) {
+        return feeTypeRepository.findById(id)
+                .map(FeeTypeMapper::toDTO)
+                .orElse(null);
     }
 
-    public FeeType createFeeType(FeeType feeType) {
-        feeType.setCreatedAt(LocalDateTime.now());
-        feeType.setUpdatedAt(LocalDateTime.now());
-        return feeTypeRepository.save(feeType);
+    public FeeTypeDTO createFeeType(NewFeeTypeDTO feeTypeDTO) {
+        FeeType feeType = FeeTypeMapper.toEntity(feeTypeDTO);
+        if (feeType == null) {
+            throw new IllegalArgumentException("Invalid fee type data");
+        }
+        FeeType savedFeeType = feeTypeRepository.save(feeType);
+        return FeeTypeMapper.toDTO(savedFeeType);
     }
 
-    public FeeType updateFeeType(Long id, FeeType feeType) {
+    public FeeTypeDTO updateFeeType(Long id, NewFeeTypeDTO feeTypeDTO) {
         FeeType existingFeeType = feeTypeRepository.findById(id).orElse(null);
-        if (existingFeeType != null) {
-            existingFeeType.setName(feeType.getName());
-            existingFeeType.setCategory(feeType.getCategory());
-            existingFeeType.setUnit(feeType.getUnit());
-            existingFeeType.setPricePerUnit(feeType.getPricePerUnit());
-            existingFeeType.setBillingCycle(feeType.getBillingCycle());
-            existingFeeType.setDescription(feeType.getDescription());
-            existingFeeType.setIsActive(feeType.getIsActive());
-            existingFeeType.setUpdatedAt(LocalDateTime.now());
-            return feeTypeRepository.save(existingFeeType);
+        if (existingFeeType == null) {
+            return null;
         }
-        return null;
+        FeeTypeMapper.updateEntity(existingFeeType, feeTypeDTO);
+        FeeType updatedFeeType = feeTypeRepository.save(existingFeeType);
+        return FeeTypeMapper.toDTO(updatedFeeType);
     }
 
     public void deleteFeeType(Long id) {
-        feeTypeRepository.deleteById(id);
+        FeeType feeType = feeTypeRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Fee type not found"));
+        feeType.setIsActive(false);
+        feeTypeRepository.save(feeType);
     }
 
-    public List<FeeType> searchFeeTypes(String searchTerm) {
-        return feeTypeRepository.findByNameContainingOrCategoryContaining(searchTerm, searchTerm);
+    public List<FeeTypeDTO> searchFeeTypes(String searchTerm) {
+        return feeTypeRepository.findByNameContainingOrDescriptionContaining(searchTerm, searchTerm).stream()
+                .map(FeeTypeMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
-    public List<FeeType> getFeeTypesByCategory(String category) {
-        return feeTypeRepository.findByCategory(category);
+    public List<FeeTypeDTO> getFeeTypesByCategory(String category) {
+        return feeTypeRepository.findByCategory(category).stream()
+                .map(FeeTypeMapper::toDTO)
+                .collect(Collectors.toList());
     }
-} 
+}

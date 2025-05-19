@@ -2,10 +2,9 @@ package management.resident_management.mapper;
 
 import management.resident_management.dto.NewResidentDTO;
 import management.resident_management.dto.ResidentDTO;
+import management.resident_management.entity.Apartment;
 import management.resident_management.entity.Resident;
 import management.resident_management.entity.UserRole;
-
-import java.time.LocalDate;
 
 public class ResidentMapper {
 
@@ -13,30 +12,27 @@ public class ResidentMapper {
         if (resident == null) {
             return null;
         }
-
         ResidentDTO dto = new ResidentDTO();
         dto.setId(resident.getId());
-        dto.setName(resident.getName());
         dto.setEmail(resident.getEmail());
         dto.setPhoneNumber(resident.getPhoneNumber());
-        dto.setUnitNumber(resident.getUnitNumber());
-        dto.setDepartment(resident.getDepartment());
-        dto.setLeaseStartDate(resident.getLeaseStartDate() != null ? resident.getLeaseStartDate().toString() : null);
-        dto.setLeaseEndDate(resident.getLeaseEndDate() != null ? resident.getLeaseEndDate().toString() : null);
-        dto.setRole(resident.getRole() != null ? resident.getRole().toString() : null);
+        dto.setRole(resident.getRole() != null ? resident.getRole().name() : null);
+        dto.setName(resident.getName());
         dto.setGender(resident.getGender());
+        dto.setUnitNumber(resident.getUnitNumber());
         dto.setHometown(resident.getHometown());
         dto.setAddress(resident.getAddress());
         dto.setDescription(resident.getDescription());
-        dto.setBirthday(resident.getBirthday() != null ? resident.getBirthday().toString() : null);
-        dto.setStripeCustomerId(resident.getStripeCustomerId());
-        dto.setStatus(resident.getStatus());
+        dto.setBirthday(resident.getBirthday());
+        dto.setCreatedAt(resident.getCreatedAt());
+        dto.setUpdatedAt(resident.getUpdatedAt());
+        dto.setDeletedAt(resident.getDeletedAt());
         dto.setActive(resident.isActive());
-        dto.setCreatedAt(resident.getCreatedAt() != null ? resident.getCreatedAt().toString() : null);
-        dto.setUpdatedAt(resident.getUpdatedAt() != null ? resident.getUpdatedAt().toString() : null);
-        dto.setDeletedAt(resident.getDeletedAt() != null ? resident.getDeletedAt().toString() : null);
-        dto.setBuilding(resident.getBuilding());
-
+        dto.setStripeCustomerId(resident.getStripeCustomerId());
+        dto.setApartmentId(resident.getApartment() != null ? resident.getApartment().getId() : null);
+        dto.setLeaseStartDate(resident.getLeaseStartDate());
+        dto.setLeaseEndDate(resident.getLeaseEndDate());
+        dto.setStatus(resident.getStatus());
         return dto;
     }
 
@@ -44,26 +40,30 @@ public class ResidentMapper {
         if (dto == null) {
             return null;
         }
-
-        Resident resident = new Resident();
-        resident.setName(dto.getName());
-        resident.setEmail(dto.getEmail());
-        resident.setPhoneNumber(dto.getPhoneNumber());
-        resident.setUnitNumber(dto.getUnitNumber());
-        resident.setDepartment(dto.getDepartment());
-        resident.setLeaseStartDate(parseDate(dto.getLeaseStartDate()));
-        resident.setLeaseEndDate(parseDate(dto.getLeaseEndDate()));
-        resident.setRole(dto.getRole() != null ? Enum.valueOf(UserRole.class, dto.getRole()) : UserRole.RESIDENT);
-        resident.setGender(dto.getGender());
-        resident.setHometown(dto.getHometown());
-        resident.setAddress(dto.getAddress());
-        resident.setDescription(dto.getDescription());
-        resident.setBirthday(parseDate(dto.getBirthday()));
-        resident.setStripeCustomerId(dto.getStripeCustomerId());
-        resident.setStatus(dto.getStatus());
-        resident.setActive(dto.isActive());
-        resident.setBuilding(dto.getBuilding());
-
+        Resident resident = Resident.builder()
+                .email(dto.getEmail())
+                .phoneNumber(dto.getPhoneNumber())
+                .name(dto.getName())
+                .gender(dto.getGender())
+                .unitNumber(dto.getUnitNumber())
+                .hometown(dto.getHometown())
+                .address(dto.getAddress())
+                .description(dto.getDescription())
+                .birthday(dto.getBirthday())
+                .isActive(dto.isActive())
+                .stripeCustomerId(dto.getStripeCustomerId())
+                .leaseStartDate(dto.getLeaseStartDate())
+                .leaseEndDate(dto.getLeaseEndDate())
+                .status(dto.getStatus())
+                .build();
+        try {
+            resident.setRole(UserRole.valueOf(dto.getRole()));
+        } catch (IllegalArgumentException e) {
+            resident.setRole(UserRole.RESIDENT);
+        }
+        Apartment apartment = new Apartment();
+        apartment.setId(dto.getApartmentId());
+        resident.setApartment(apartment);
         return resident;
     }
 
@@ -71,30 +71,27 @@ public class ResidentMapper {
         if (resident == null || dto == null) {
             return;
         }
-
-        resident.setName(dto.getName());
         resident.setEmail(dto.getEmail());
         resident.setPhoneNumber(dto.getPhoneNumber());
-        resident.setUnitNumber(dto.getUnitNumber());
-        resident.setDepartment(dto.getDepartment());
-        resident.setLeaseStartDate(parseDate(dto.getLeaseStartDate()));
-        resident.setLeaseEndDate(parseDate(dto.getLeaseEndDate()));
-        resident.setRole(dto.getRole() != null ? Enum.valueOf(UserRole.class, dto.getRole()) : UserRole.RESIDENT);
+        try {
+            resident.setRole(UserRole.valueOf(dto.getRole()));
+        } catch (IllegalArgumentException e) {
+            resident.setRole(UserRole.RESIDENT);
+        }
+        resident.setName(dto.getName());
         resident.setGender(dto.getGender());
+        resident.setUnitNumber(dto.getUnitNumber());
         resident.setHometown(dto.getHometown());
         resident.setAddress(dto.getAddress());
         resident.setDescription(dto.getDescription());
-        resident.setBirthday(parseDate(dto.getBirthday()));
-        resident.setStripeCustomerId(dto.getStripeCustomerId());
-        resident.setStatus(dto.getStatus());
+        resident.setBirthday(dto.getBirthday());
         resident.setActive(dto.isActive());
-        resident.setBuilding(dto.getBuilding());
-    }
-
-    private static LocalDate parseDate(String dateStr) {
-        if (dateStr == null || dateStr.trim().isEmpty()) {
-            return null;
-        }
-        return LocalDate.parse(dateStr);
+        resident.setStripeCustomerId(dto.getStripeCustomerId());
+        Apartment apartment = new Apartment();
+        apartment.setId(dto.getApartmentId());
+        resident.setApartment(apartment);
+        resident.setLeaseStartDate(dto.getLeaseStartDate());
+        resident.setLeaseEndDate(dto.getLeaseEndDate());
+        resident.setStatus(dto.getStatus());
     }
 }

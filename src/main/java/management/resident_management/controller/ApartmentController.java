@@ -1,9 +1,9 @@
 package management.resident_management.controller;
 
 import lombok.RequiredArgsConstructor;
-import management.resident_management.dto.FeeTypeDTO;
-import management.resident_management.dto.NewFeeTypeDTO;
-import management.resident_management.service.FeeTypeService;
+import management.resident_management.dto.ApartmentDTO;
+import management.resident_management.dto.NewApartmentDTO;
+import management.resident_management.service.ApartmentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -15,89 +15,76 @@ import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/fee-type")
+@RequestMapping("/api/apartment")
 @CrossOrigin(origins = "http://localhost:3000")
 @RequiredArgsConstructor
 @Validated
-public class FeeTypeController {
+public class ApartmentController {
 
-    private final FeeTypeService feeTypeService;
+    private final ApartmentService apartmentService;
 
     @GetMapping
-    public ResponseEntity<List<FeeTypeDTO>> getAllFeeTypes() {
+    public ResponseEntity<List<ApartmentDTO>> getAllApartments() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
-        return ResponseEntity.ok(feeTypeService.getAllFeeTypes());
+        return ResponseEntity.ok(apartmentService.getAllApartments());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<FeeTypeDTO> getFeeTypeById(@PathVariable Long id) {
+    public ResponseEntity<ApartmentDTO> getApartmentById(@PathVariable Long id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
-        FeeTypeDTO feeType = feeTypeService.getFeeTypeById(id);
-        return feeType != null ? ResponseEntity.ok(feeType) : ResponseEntity.notFound().build();
+        ApartmentDTO apartment = apartmentService.getApartmentById(id);
+        return apartment != null ? ResponseEntity.ok(apartment) : ResponseEntity.notFound().build();
     }
 
     @PostMapping
-    public ResponseEntity<FeeTypeDTO> createFeeType(@Valid @RequestBody NewFeeTypeDTO feeTypeDTO) {
+    public ResponseEntity<ApartmentDTO> createApartment(@Valid @RequestBody NewApartmentDTO apartmentDTO) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
         try {
-            return ResponseEntity.ok(feeTypeService.createFeeType(feeTypeDTO));
+            return ResponseEntity.ok(apartmentService.createApartment(apartmentDTO));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(null);
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<FeeTypeDTO> updateFeeType(@PathVariable Long id, @Valid @RequestBody NewFeeTypeDTO feeTypeDTO) {
+    public ResponseEntity<ApartmentDTO> updateApartment(@PathVariable Long id, @Valid @RequestBody NewApartmentDTO apartmentDTO) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
         try {
-            FeeTypeDTO updatedFeeType = feeTypeService.updateFeeType(id, feeTypeDTO);
-            return updatedFeeType != null ? ResponseEntity.ok(updatedFeeType) : ResponseEntity.notFound().build();
+            ApartmentDTO updatedApartment = apartmentService.updateApartment(id, apartmentDTO);
+            return updatedApartment != null ? ResponseEntity.ok(updatedApartment) : ResponseEntity.notFound().build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(null);
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteFeeType(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteApartment(@PathVariable Long id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
-        try {
-            feeTypeService.deleteFeeType(id);
-            return ResponseEntity.ok().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        apartmentService.deleteApartment(id);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<FeeTypeDTO>> searchFeeTypes(@RequestParam String searchTerm) {
+    public ResponseEntity<List<ApartmentDTO>> searchApartments(@RequestParam String searchTerm) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
-        return ResponseEntity.ok(feeTypeService.searchFeeTypes(searchTerm));
-    }
-
-    @GetMapping("/category/{category}")
-    public ResponseEntity<List<FeeTypeDTO>> getFeeTypesByCategory(@PathVariable String category) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-        }
-        return ResponseEntity.ok(feeTypeService.getFeeTypesByCategory(category));
+        return ResponseEntity.ok(apartmentService.searchApartments(searchTerm));
     }
 }

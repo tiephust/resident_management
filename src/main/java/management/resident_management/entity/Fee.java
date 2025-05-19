@@ -14,12 +14,15 @@ public class Fee {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "resident_id", nullable = false)
-    private Resident resident;
+    @JoinColumn(name = "apartment_id", nullable = false)
+    private Apartment apartment;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "fee_type_id", nullable = false)
+    @JoinColumn(name = "fee_type_id", nullable = true)
     private FeeType feeType;
+
+    @Column
+    private Long residentId;
 
     @Column(nullable = false)
     private Double amount;
@@ -36,6 +39,12 @@ public class Fee {
 
     @Column
     private String description;
+
+    @Column
+    private String stripePaymentIntentId;
+
+    @Column
+    private String stripePaymentStatus;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
@@ -55,11 +64,5 @@ public class Fee {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-    }
-
-    public enum FeeStatus {
-        PAID,
-        UNPAID,
-        OVERDUE
     }
 }

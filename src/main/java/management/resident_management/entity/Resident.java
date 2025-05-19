@@ -18,19 +18,19 @@ import java.time.LocalDate;
 @PrimaryKeyJoinColumn(name = "user_id")
 public class Resident extends User {
 
+    @Column
     private String stripeCustomerId;
 
-    @OneToMany(mappedBy = "resident")
-    private List<Fee> fees;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "apartment_id", nullable = false)
+    private Apartment apartment;
 
+    @Column
     private LocalDate leaseStartDate;
 
+    @Column
     private LocalDate leaseEndDate;
 
-//    @Column(nullable = false)
-    private String department;
-
+    @Column
     private String status;
-
-    private String building;
 }

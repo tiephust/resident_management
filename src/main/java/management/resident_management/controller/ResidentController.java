@@ -1,9 +1,9 @@
 package management.resident_management.controller;
 
+import lombok.RequiredArgsConstructor;
 import management.resident_management.dto.NewResidentDTO;
 import management.resident_management.dto.ResidentDTO;
 import management.resident_management.service.ResidentService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -75,8 +75,12 @@ public class ResidentController {
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
-        residentService.deleteResident(id);
-        return ResponseEntity.ok().build();
+        try {
+            residentService.deleteResident(id);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @GetMapping("/search")
@@ -95,5 +99,23 @@ public class ResidentController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
         return ResponseEntity.ok(residentService.getResidentsByStatus(status));
+    }
+
+    @GetMapping("/unit/{unitNumber}")
+    public ResponseEntity<List<ResidentDTO>> getResidentsByUnitNumber(@PathVariable String unitNumber) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+        return ResponseEntity.ok(residentService.getResidentsByUnitNumber(unitNumber));
+    }
+
+    @GetMapping("/apartment/{apartmentId}")
+    public ResponseEntity<List<ResidentDTO>> getResidentsByApartmentId(@PathVariable Long apartmentId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+        return ResponseEntity.ok(residentService.getResidentsByApartmentId(apartmentId));
     }
 }

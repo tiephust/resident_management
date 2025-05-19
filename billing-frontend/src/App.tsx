@@ -14,7 +14,7 @@ import ResetPassword from './pages/auth/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import Bills from './pages/Bills';
 import Residents from './pages/Residents';
-import Payments from './pages/Payments';
+// import Payments from './pages/Payments';
 import AdminLayout from './components/AdminLayout';
 import ResidentLayout from './components/ResidentLayout';
 import AdminDashboard from './pages/admin/DashboardPage';
@@ -36,6 +36,7 @@ import ResidentComments from './pages/resident/Comments';
 import ResidentProfile from './pages/resident/Profile';
 import { NotFound, Forbidden, ServerError } from './pages/error';
 import FeeTypeManagement from "./pages/admin/FeeTypeManagementPage";
+import Payments from "./components/common/Payments"
 
 const PrivateRoute: React.FC<{ children: React.ReactNode; role?: string }> = ({ children, role }) => {
 
@@ -59,6 +60,7 @@ const App: React.FC = () => {
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              {/*<Route path="/payment-test" element={<Payments>} />*/}
 
               {/* Main App Routes */}
               <Route path="/" element={
@@ -69,14 +71,14 @@ const App: React.FC = () => {
                 {/*<Route index element={<Navigate to={ === 'ADMIN' ? '/admin/dashboard' : '/resident/dashboard'} replace />} />*/}
                 <Route path="bills" element={<Bills />} />
                 <Route path="residents" element={<Residents />} />
-                <Route path="payments" element={<Payments />} />
+                <Route path="payments-test" element={<Payments />} />
               </Route>
 
               {/* Resident Routes */}
               <Route path="/resident" element={
-                <PrivateRoute role="RESIDENT">
+                // <PrivateRoute role="RESIDENT">
                   <ResidentLayout />
-                </PrivateRoute>
+                // </PrivateRoute>
               }>
                 <Route index element={<Navigate to="dashboard" replace />} />
                 <Route path="dashboard" element={<ResidentDashboard />} />

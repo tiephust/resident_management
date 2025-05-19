@@ -25,7 +25,7 @@ public class FeeType {
     private Double pricePerUnit;
 
     @Column(nullable = false)
-    private String billingCycle;
+    private BillingCycle billingCycle;
 
     @Column
     private String description;
