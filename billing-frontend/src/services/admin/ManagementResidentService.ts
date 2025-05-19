@@ -15,12 +15,14 @@ export const managementResidentService = {
   },
 
   createResident: async (resident: NewResident) => {
-    const response = await axiosInstance.post(API_URL, resident);
+    const { password, ...residentData } = resident;
+    const response = await axiosInstance.post(API_URL, residentData);
     return response.data;
   },
 
   updateResident: async (id: number, resident: Partial<Resident>) => {
-    const response = await axiosInstance.put(`${API_URL}/${id}`, resident);
+    const { password, ...residentData } = resident;
+    const response = await axiosInstance.put(`${API_URL}/${id}`, residentData);
     return response.data;
   },
 

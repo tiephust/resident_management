@@ -25,6 +25,9 @@ public class Resident extends User {
     @JoinColumn(name = "apartment_id", nullable = false)
     private Apartment apartment;
 
+    @OneToMany(mappedBy = "resident", cascade = CascadeType.ALL)
+    private List<Report> reports;
+
     @Column
     private LocalDate leaseStartDate;
 

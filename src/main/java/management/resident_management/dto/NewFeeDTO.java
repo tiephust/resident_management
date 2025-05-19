@@ -22,7 +22,6 @@ public class NewFeeDTO {
     @NotNull(message = "Due date is required")
     private LocalDate dueDate;
 
-    @NotBlank(message = "Description is required")
     private String description;
 
     @NotBlank(message = "Status is required")

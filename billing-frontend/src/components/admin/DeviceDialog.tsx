@@ -27,6 +27,24 @@ const DeviceDialog: React.FC<DeviceDialogProps> = ({
         { value: 'BROKEN', label: 'Hỏng' },
     ];
 
+    const formatDateForInput = (dateString: string) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:mm
+    };
+
+    const formatDateForDisplay = (dateString: string) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toLocaleString('vi-VN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
     // Kiểm tra xem device có id hay không (tức là Device, không phải NewDevice)
     const hasId = device && 'id' in device;
 
@@ -99,8 +117,8 @@ const DeviceDialog: React.FC<DeviceDialogProps> = ({
                     <TextField
                         label="Ngày bảo trì gần nhất"
                         fullWidth
-                        type="date"
-                        value={device?.maintenanceAt || ''}
+                        type="datetime-local"
+                        value={formatDateForInput(device?.maintenanceAt || '')}
                         onChange={(e) =>
                             device && setDevice({ ...device, maintenanceAt: e.target.value })
                         }
@@ -121,14 +139,14 @@ const DeviceDialog: React.FC<DeviceDialogProps> = ({
                             <TextField
                                 label="Ngày tạo"
                                 fullWidth
-                                value={device?.createdAt || ''}
+                                value={formatDateForDisplay(device?.createdAt || '')}
                                 InputProps={{ readOnly: true }}
                                 InputLabelProps={{ shrink: true }}
                             />
                             <TextField
                                 label="Ngày cập nhật"
                                 fullWidth
-                                value={device?.updatedAt || ''}
+                                value={formatDateForDisplay(device?.updatedAt || '')}
                                 InputProps={{ readOnly: true }}
                                 InputLabelProps={{ shrink: true }}
                             />

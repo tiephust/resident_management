@@ -71,6 +71,9 @@ const ResidentManagementPage: React.FC = () => {
           description: item.description || '',
           birthday: item.birthday || '',
           stripeCustomerId: item.stripeCustomerId || '',
+          apartmentId: item.apartmentId || null,
+          leaseStartDate: item.leaseStartDate || '',
+          leaseEndDate: item.leaseEndDate || '',
         }));
         setResidents(mappedData);
       } catch (error) {
@@ -351,11 +354,11 @@ const ResidentManagementPage: React.FC = () => {
                 </TableCell>
                 <TableCell>
                   <TableSortLabel
-                      active={orderBy === 'department'}
-                      direction={orderBy === 'department' ? order : 'asc'}
-                      onClick={() => handleRequestSort('department')}
+                      active={orderBy === 'apartmentId'}
+                      direction={orderBy === 'apartmentId' ? order : 'asc'}
+                      onClick={() => handleRequestSort('apartmentId')}
                   >
-                    Phòng ban
+                    Căn hộ
                   </TableSortLabel>
                 </TableCell>
                 <TableCell>
@@ -386,7 +389,7 @@ const ResidentManagementPage: React.FC = () => {
                     <TableCell>{resident.email}</TableCell>
                     <TableCell>{resident.unitNumber}</TableCell>
                     <TableCell>{resident.phoneNumber}</TableCell>
-                    <TableCell>{resident.department}</TableCell>
+                    <TableCell>{resident.apartmentId}</TableCell>
                     <TableCell>{resident.address}</TableCell>
                     <TableCell>
                       <Chip

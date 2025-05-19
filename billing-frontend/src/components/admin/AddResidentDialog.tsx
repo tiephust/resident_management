@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     TextField,
     Grid,
@@ -9,12 +9,19 @@ import {
 } from '@mui/material';
 import AddUserDialog from './common/AddUserDialog';
 import { Resident, NewResident } from '../../types/admin/ResidentManagementType';
+import { apartmentService } from '../../services/admin/apartmentService';
 
 const roleConfig: Record<string, { label: string; color: 'success' | 'warning' | 'info' | 'error' | 'default' }> = {
     RESIDENT: { label: 'Cư dân', color: 'success' },
     TEMPORARY: { label: 'Tạm trú', color: 'warning' },
     GUEST: { label: 'Khách', color: 'info' },
 };
+
+interface Apartment {
+    id: number;
+    number: string;
+    building: string;
+}
 
 interface AddResidentDialogProps {
     open: boolean;
@@ -25,22 +32,43 @@ interface AddResidentDialogProps {
 }
 
 const AddResidentDialog: React.FC<AddResidentDialogProps> = ({
-                                                                 open,
-                                                                 resident,
-                                                                 setResident,
-                                                                 onClose,
-                                                                 onSave,
-                                                             }) => {
+    open,
+    resident,
+    setResident,
+    onClose,
+    onSave,
+}) => {
+    const [apartments, setApartments] = useState<Apartment[]>([]);
+
+    useEffect(() => {
+        const loadApartments = async () => {
+            try {
+                const data = await apartmentService.getAllApartments();
+                setApartments(data);
+            } catch (error) {
+                console.error('Error loading apartments:', error);
+            }
+        };
+        loadApartments();
+    }, []);
+
     const additionalFields = (
         <>
             <Grid item xs={6}>
-                <TextField
-                    fullWidth
-                    label="Căn hộ"
-                    required
-                    value={resident?.department || ''}
-                    onChange={(e) => setResident({ ...resident!, department: e.target.value })}
-                />
+                <FormControl fullWidth>
+                    <InputLabel>Căn hộ</InputLabel>
+                    <Select
+                        value={resident?.apartmentId || ''}
+                        label="Căn hộ"
+                        onChange={(e) => setResident({ ...resident!, apartmentId: e.target.value as number })}
+                    >
+                        {apartments.map((apt) => (
+                            <MenuItem key={apt.id} value={apt.id}>
+                                {apt.building} - {apt.number}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
             </Grid>
             <Grid item xs={6}>
                 <TextField
@@ -53,11 +81,21 @@ const AddResidentDialog: React.FC<AddResidentDialogProps> = ({
             <Grid item xs={12}>
                 <TextField
                     fullWidth
-                    label="Ngày mua"
+                    label="Ngày bắt đầu"
                     type="date"
                     InputLabelProps={{ shrink: true }}
                     value={resident?.leaseStartDate || ''}
                     onChange={(e) => setResident({ ...resident!, leaseStartDate: e.target.value })}
+                />
+            </Grid>
+            <Grid item xs={12}>
+                <TextField
+                    fullWidth
+                    label="Ngày kết thúc"
+                    type="date"
+                    InputLabelProps={{ shrink: true }}
+                    value={resident?.leaseEndDate || ''}
+                    onChange={(e) => setResident({ ...resident!, leaseEndDate: e.target.value })}
                 />
             </Grid>
             <Grid item xs={12}>

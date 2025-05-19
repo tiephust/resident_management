@@ -9,10 +9,7 @@ export const deviceService = {
         const response = await axiosInstance.get(API_URL);
         return response.data.map((d: any) => ({
             ...d,
-            status: mapStatusToFrontend(d.status),
-            maintenanceAt: d.maintenanceAt.split('T')[0],
-            createdAt: d.createdAt.split('T')[0],
-            updatedAt: d.updatedAt.split('T')[0]
+            status: mapStatusToFrontend(d.status)
         }));
     },
 
@@ -21,24 +18,27 @@ export const deviceService = {
         const data = response.data;
         return {
             ...data,
-            status: mapStatusToFrontend(data.status),
-            maintenanceAt: data.maintenanceAt.split('T')[0]
+            status: mapStatusToFrontend(data.status)
         };
     },
 
     createDevice: async (device: NewDevice): Promise<Device> => {
-        const response = await axiosInstance.post(API_URL, {
+        const formattedDevice = {
             ...device,
-            status: mapStatusToBackend(device.status)
-        });
+            status: mapStatusToBackend(device.status),
+            maintenanceAt: new Date(device.maintenanceAt).toISOString().slice(0, 19)
+        };
+        const response = await axiosInstance.post(API_URL, formattedDevice);
         return response.data;
     },
 
     updateDevice: async (id: number, device: NewDevice): Promise<Device> => {
-        const response = await axiosInstance.put(`${API_URL}/${id}`, {
+        const formattedDevice = {
             ...device,
-            status: mapStatusToBackend(device.status)
-        });
+            status: mapStatusToBackend(device.status),
+            maintenanceAt: new Date(device.maintenanceAt).toISOString().slice(0, 19)
+        };
+        const response = await axiosInstance.put(`${API_URL}/${id}`, formattedDevice);
         return response.data;
     },
 
@@ -50,8 +50,7 @@ export const deviceService = {
         const response = await axiosInstance.get(`${API_URL}/search?searchTerm=${searchTerm}`);
         return response.data.map((d: any) => ({
             ...d,
-            status: mapStatusToFrontend(d.status),
-            maintenanceAt: d.maintenanceAt.split('T')[0]
+            status: mapStatusToFrontend(d.status)
         }));
     },
 
@@ -59,8 +58,7 @@ export const deviceService = {
         const response = await axiosInstance.get(`${API_URL}/status/${mapStatusToBackend(status)}`);
         return response.data.map((d: any) => ({
             ...d,
-            status: mapStatusToFrontend(d.status),
-            maintenanceAt: d.maintenanceAt.split('T')[0]
+            status: mapStatusToFrontend(d.status)
         }));
     }
 };
