@@ -1,6 +1,6 @@
 package management.resident_management.controller;
 
-import management.resident_management.dto.PasswordChangeDto;
+import management.resident_management.dto.PasswordFormDto;
 import management.resident_management.dto.UserInfoDto;
 import management.resident_management.dto.UserUpdateDto;
 import management.resident_management.entity.User;
@@ -42,14 +42,14 @@ public class UserController {
     }
 
     @PutMapping("/me/password")
-    public ResponseEntity<Void> changePassword(@Valid @RequestBody PasswordChangeDto passwordChangeDto) {
+    public ResponseEntity<Void> changePassword(@Valid @RequestBody PasswordFormDto passwordFormDto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         String email = authentication.getName();
         User user = userService.getUserByEmail(email);
-        userService.changePassword(user.getId(), passwordChangeDto);
+        userService.changePassword(user.getId(), passwordFormDto);
         return ResponseEntity.ok().build();
     }
 }

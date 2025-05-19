@@ -14,6 +14,9 @@ public class UserInfoDto {
     private Long id;
     private String name;
     private String email;
+    private String phone;
+    private String address;
+    private String apartment;
     private String role;
 
     public static UserInfoDto toUserInforDto(User user) {

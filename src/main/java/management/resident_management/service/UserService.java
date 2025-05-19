@@ -1,6 +1,6 @@
 package management.resident_management.service;
 
-import management.resident_management.dto.PasswordChangeDto;
+import management.resident_management.dto.PasswordFormDto;
 import management.resident_management.dto.UserUpdateDto;
 import management.resident_management.entity.User;
 import management.resident_management.repository.UserRepository;
@@ -37,15 +37,15 @@ public class UserService {
     }
 
     @Transactional
-    public void changePassword(Long userId, PasswordChangeDto passwordChangeDto) {
+    public void changePassword(Long userId, PasswordFormDto passwordFormDto) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (!passwordEncoder.matches(passwordChangeDto.getCurrentPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(passwordFormDto.getCurrentPassword(), user.getPassword())) {
             throw new RuntimeException("Current password is incorrect");
         }
 
-        user.setPassword(passwordEncoder.encode(passwordChangeDto.getNewPassword()));
+        user.setPassword(passwordEncoder.encode(passwordFormDto.getNewPassword()));
         userRepository.save(user);
     }
 
