@@ -1,56 +1,30 @@
 import axiosInstance from '../axiosInstance';
-import { FeeDTO, PaymentRequestDTO, RefundRequestDTO } from '../../types/fee';
+import { FeeDTO, NewFeeDTO, PaymentRequestDTO, RefundRequestDTO } from '../../types/fee';
 
-export const feeService = {
-    getPayments: async (status: string = 'ALL', residentName: string = ''): Promise<FeeDTO[]> => {
+export const managementFeeService = {
+    getAllFees: async (): Promise<FeeDTO[]> => {
         try {
-            const response = await axiosInstance.get('/api/payments/admin', {
-                params: { status, resident: residentName }
-            });
+            const response = await axiosInstance.get('/api/fee');
             return response.data;
         } catch (error) {
-            console.error('Error fetching payments:', error);
+            console.error('Error fetching fees:', error);
             throw error;
         }
     },
 
-    createPaymentIntent: async (paymentData: PaymentRequestDTO): Promise<{ clientSecret: string }> => {
+    getFeeById: async (id: number): Promise<FeeDTO> => {
         try {
-            const response = await axiosInstance.post('/api/payments/create-payment-intent', paymentData);
+            const response = await axiosInstance.get(`/api/fee/${id}`);
             return response.data;
         } catch (error) {
-            console.error('Error creating payment intent:', error);
+            console.error('Error fetching fee:', error);
             throw error;
         }
     },
 
-    confirmPayment: async (feeId: string, stripePaymentId: string): Promise<void> => {
+    createFee: async (fee: NewFeeDTO): Promise<FeeDTO> => {
         try {
-            await axiosInstance.post('/api/payments/confirm', {
-                feeId,
-                stripePaymentId
-            });
-        } catch (error) {
-            console.error('Error confirming payment:', error);
-            throw error;
-        }
-    },
-
-    processRefund: async (feeId: number, paymentIntentId: string): Promise<void> => {
-        try {
-            await axiosInstance.post(`/api/payments/refund/${feeId}`, {
-                feeId,
-                paymentIntentId
-            });
-        } catch (error) {
-            console.error('Error processing refund:', error);
-            throw error;
-        }
-    },
-
-    createFee: async (fee: FeeDTO): Promise<FeeDTO> => {
-        try {
-            const response = await axiosInstance.post('/api/payments', fee);
+            const response = await axiosInstance.post('/api/fee', fee);
             return response.data;
         } catch (error) {
             console.error('Error creating fee:', error);
@@ -58,9 +32,9 @@ export const feeService = {
         }
     },
 
-    updateFee: async (id: number, fee: FeeDTO): Promise<FeeDTO> => {
+    updateFee: async (id: number, fee: NewFeeDTO): Promise<FeeDTO> => {
         try {
-            const response = await axiosInstance.put(`/api/payments/${id}`, fee);
+            const response = await axiosInstance.put(`/api/fee/${id}`, fee);
             return response.data;
         } catch (error) {
             console.error('Error updating fee:', error);
@@ -70,7 +44,7 @@ export const feeService = {
 
     deleteFee: async (id: number): Promise<void> => {
         try {
-            await axiosInstance.delete(`/api/payments/${id}`);
+            await axiosInstance.delete(`/api/fee/${id}`);
         } catch (error) {
             console.error('Error deleting fee:', error);
             throw error;
@@ -79,12 +53,54 @@ export const feeService = {
 
     searchFees: async (searchTerm: string): Promise<FeeDTO[]> => {
         try {
-            const response = await axiosInstance.get('/api/payments/search', {
+            const response = await axiosInstance.get('/api/fee/search', {
                 params: { searchTerm }
             });
             return response.data;
         } catch (error) {
             console.error('Error searching fees:', error);
+            throw error;
+        }
+    },
+
+    getFeesByApartment: async (apartmentId: number): Promise<FeeDTO[]> => {
+        try {
+            const response = await axiosInstance.get(`/api/fee/apartment/${apartmentId}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching apartment fees:', error);
+            throw error;
+        }
+    },
+
+    createPaymentIntent: async (paymentData: PaymentRequestDTO): Promise<{ clientSecret: string }> => {
+        try {
+            const response = await axiosInstance.post('/api/fee/payment-intent', paymentData);
+            return response.data;
+        } catch (error) {
+            console.error('Error creating payment intent:', error);
+            throw error;
+        }
+    },
+
+    confirmPayment: async (feeId: number, stripePaymentId: string): Promise<FeeDTO> => {
+        try {
+            const response = await axiosInstance.post('/api/fee/confirm-payment', null, {
+                params: { feeId, stripePaymentId }
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error confirming payment:', error);
+            throw error;
+        }
+    },
+
+    processRefund: async (request: RefundRequestDTO): Promise<FeeDTO> => {
+        try {
+            const response = await axiosInstance.post('/api/fee/refund', request);
+            return response.data;
+        } catch (error) {
+            console.error('Error processing refund:', error);
             throw error;
         }
     }

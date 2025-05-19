@@ -18,7 +18,8 @@ export interface NewFeeDTO {
     feeTypeId: number;
     amount: number;
     dueDate: string;
-    description?: string;
+    description: string | null;
+    status: 'PAID' | 'UNPAID' | 'OVERDUE';
 }
 
 export interface PaymentRequestDTO {

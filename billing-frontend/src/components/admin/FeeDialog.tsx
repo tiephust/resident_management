@@ -187,10 +187,10 @@ const FeeDialog: React.FC<FeeDialogProps> = ({
                                 label="Hạn đóng"
                                 type="date"
                                 fullWidth
-                                value={fee?.dueDate ? fee.dueDate.toISOString().split('T')[0] : ''}
+                                value={fee?.dueDate ? fee.dueDate.split('T')[0] : ''}
                                 onChange={(e) =>
                                     setFee((prev) =>
-                                        prev ? { ...prev, dueDate: new Date(e.target.value) } : null
+                                        prev ? { ...prev, dueDate: e.target.value } : null
                                     )
                                 }
                                 InputLabelProps={{
@@ -203,10 +203,10 @@ const FeeDialog: React.FC<FeeDialogProps> = ({
                                 label="Ngày thanh toán"
                                 type="date"
                                 fullWidth
-                                value={fee?.paymentDate ? fee.paymentDate.toISOString().split('T')[0] : ''}
+                                value={fee?.paymentDate ? fee.paymentDate.split('T')[0] : ''}
                                 onChange={(e) =>
                                     setFee((prev) =>
-                                        prev ? { ...prev, paymentDate: e.target.value ? new Date(e.target.value) : null } : null
+                                        prev ? { ...prev, paymentDate: e.target.value || null } : null
                                     )
                                 }
                                 InputLabelProps={{
@@ -222,7 +222,7 @@ const FeeDialog: React.FC<FeeDialogProps> = ({
                                     label="Trạng thái"
                                     onChange={(e) =>
                                         setFee((prev) =>
-                                            prev ? { ...prev, status: e.target.value as string } : null
+                                            prev ? { ...prev, status: e.target.value as 'PAID' | 'UNPAID' | 'OVERDUE' } : null
                                         )
                                     }
                                     disabled={loading}
@@ -241,7 +241,7 @@ const FeeDialog: React.FC<FeeDialogProps> = ({
                                 value={fee?.description || ''}
                                 onChange={(e) =>
                                     setFee((prev) =>
-                                        prev ? { ...prev, description: e.target.value } : null
+                                        prev ? { ...prev, description: e.target.value || null } : null
                                     )
                                 }
                                 disabled={loading}
@@ -276,7 +276,7 @@ const FeeDialog: React.FC<FeeDialogProps> = ({
                                     <TextField
                                         label="Ngày tạo"
                                         fullWidth
-                                        value={fee?.createdAt ? fee.createdAt.toISOString().split('T')[0] : ''}
+                                        value={fee?.createdAt ? fee.createdAt.split('T')[0] : ''}
                                         InputProps={{ readOnly: true }}
                                         InputLabelProps={{ shrink: true }}
                                         disabled
@@ -284,7 +284,7 @@ const FeeDialog: React.FC<FeeDialogProps> = ({
                                     <TextField
                                         label="Ngày cập nhật"
                                         fullWidth
-                                        value={fee?.updatedAt ? fee.updatedAt.toISOString().split('T')[0] : ''}
+                                        value={fee?.updatedAt ? fee.updatedAt.split('T')[0] : ''}
                                         InputProps={{ readOnly: true }}
                                         InputLabelProps={{ shrink: true }}
                                         disabled

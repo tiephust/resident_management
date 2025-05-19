@@ -24,7 +24,7 @@ import {
 } from '@mui/material';
 import { Search as SearchIcon, Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import FeeDialog from '../../components/admin/FeeDialog';
-import { FeeDTO } from '../../types/fee';
+import { FeeDTO, NewFeeDTO } from '../../types/fee';
 import { managementFeeService } from '../../services/admin/ManagementFeeService';
 import { managementFeeTypeService } from '../../services/admin/ManagementFeeTypeService';
 import { managementApartmentService } from '../../services/admin/ManagementApartmentService';
@@ -79,9 +79,9 @@ const FeeManagementPage = () => {
           managementFeeTypeService.getAllFeeTypes(),
           managementApartmentService.getAllApartments(),
         ]);
-        setFees(Array.isArray(feesData) ? feesData : []);
-        setFeeTypes(Array.isArray(feeTypesData) ? feeTypesData : []);
-        setApartments(Array.isArray(apartmentsData) ? apartmentsData : []);
+        setFees(feesData);
+        setFeeTypes(feeTypesData);
+        setApartments(apartmentsData);
         setError(null);
       } catch (error) {
         console.error('Lỗi tải dữ liệu:', error);
@@ -98,19 +98,19 @@ const FeeManagementPage = () => {
       fee
         ? { ...fee }
         : {
-            id: null,
-            apartmentId: null,
-            feeTypeId: null,
+            id: 0,
+            apartmentId: 0,
+            feeTypeId: 0,
             amount: 0,
-            dueDate: null,
+            dueDate: new Date().toISOString().split('T')[0],
             paymentDate: null,
             status: 'UNPAID',
             description: null,
             stripePaymentIntentId: null,
             stripePaymentStatus: null,
-            createdAt: null,
-            updatedAt: null,
-          }
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        }
     );
     setOpenDialog(true);
   };
@@ -123,13 +123,22 @@ const FeeManagementPage = () => {
   const handleSaveFee = async () => {
     if (!selectedFee) return;
     try {
+      const newFee: NewFeeDTO = {
+        apartmentId: selectedFee.apartmentId,
+        feeTypeId: selectedFee.feeTypeId,
+        amount: selectedFee.amount,
+        dueDate: selectedFee.dueDate,
+        description: selectedFee.description,
+        status: selectedFee.status
+      };
+
       if (selectedFee.id) {
-        await managementFeeService.updateFee(selectedFee.id, selectedFee);
+        await managementFeeService.updateFee(selectedFee.id, newFee);
       } else {
-        await managementFeeService.createFee(selectedFee);
+        await managementFeeService.createFee(newFee);
       }
       const feesData = await managementFeeService.getAllFees();
-      setFees(Array.isArray(feesData) ? feesData : []);
+      setFees(feesData);
       handleCloseDialog();
     } catch (error) {
       console.error('Lỗi khi lưu khoản phí:', error);
