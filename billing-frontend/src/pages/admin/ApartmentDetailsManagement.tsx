@@ -17,11 +17,8 @@ import { Add as AddIcon, Visibility as VisibilityIcon, Delete as DeleteIcon } fr
 import ApartmentDetailsDialog from '../../components/admin/ApartmentDetailsDialog';
 import AddApartmentDialog from '../../components/admin/apartment/AddApartmentDialog';
 import DeleteApartmentDialog from '../../components/admin/apartment/DeleteApartmentDialog';
-import AddVehicleDialog from '../../components/admin/apartment/AddVehicleDialog';
-import EditVehicleDialog from '../../components/admin/apartment/EditVehicleDialog';
-import DeleteVehicleDialog from '../../components/admin/apartment/DeleteVehicleDialog';
-import AddDeviceDialog from '../../components/admin/apartment/AddDeviceDialog';
-import { ApartmentDetail, Vehicle, NewApartment } from '../../types/admin/ApartmentManagementType';
+import DeviceDialog from '../../components/admin/DeviceDialog';
+import { ApartmentDetail, NewApartment } from '../../types/admin/ApartmentManagementType';
 import { Device, NewDevice } from '../../types/admin/DeviceManagementType';
 import { apartmentService } from '../../services/admin/apartmentService';
 import { managementResidentService } from '../../services/admin/ManagementResidentService';
@@ -33,12 +30,8 @@ const ApartmentDetailsManagement = () => {
   const [selectedApartment, setSelectedApartment] = useState<ApartmentDetail | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [addVehicleDialogOpen, setAddVehicleDialogOpen] = useState(false);
-  const [editVehicleDialogOpen, setEditVehicleDialogOpen] = useState(false);
-  const [deleteVehicleDialogOpen, setDeleteVehicleDialogOpen] = useState(false);
-  const [addDeviceDialogOpen, setAddDeviceDialogOpen] = useState(false);
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
-  const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+  const [deviceDialogOpen, setDeviceDialogOpen] = useState(false);
+  const [editingDevice, setEditingDevice] = useState<Device | NewDevice | null>(null);
   const [addApartmentDialogOpen, setAddApartmentDialogOpen] = useState(false);
   const [newApartment, setNewApartment] = useState<NewApartment>({
     name: '',
@@ -49,20 +42,6 @@ const ApartmentDetailsManagement = () => {
     numResidents: 1,
     numKeys: 1,
     parkingSlots: { car: 0, bike: 0 },
-  });
-  const [newVehicle, setNewVehicle] = useState<Partial<Vehicle>>({
-    type: 'Xe máy',
-    licensePlate: '',
-    brand: '',
-    model: '',
-    color: '',
-  });
-  const [newDevice, setNewDevice] = useState<NewDevice>({
-    name: '',
-    type: '',
-    status: 'ACTIVE',
-    maintenanceAt: new Date().toISOString().split('T')[0],
-    apartmentId: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -77,15 +56,11 @@ const ApartmentDetailsManagement = () => {
             const owner = apt.apartmentOwnerId
               ? await managementResidentService.getResidentById(apt.apartmentOwnerId)
               : { name: 'Không xác định' };
-            const devices = apt.deviceIds.length
-              ? await Promise.all(apt.deviceIds.map((id) => deviceService.getDeviceById(id)))
-              : [];
             return {
               ...apt,
               building: 'S1' as const,
               floor: 1,
               ownerName: owner.name,
-              vehicles: [],
               numResidents: apt.residentIds.length,
               numKeys: 0,
               parkingSlots: { car: 0, bike: 0 },
@@ -142,99 +117,6 @@ const ApartmentDetailsManagement = () => {
     }
   };
 
-  const handleOpenAddVehicle = () => {
-    setAddVehicleDialogOpen(true);
-  };
-
-  const handleCloseAddVehicle = () => {
-    setAddVehicleDialogOpen(false);
-    setNewVehicle({
-      type: 'Xe máy',
-      licensePlate: '',
-      brand: '',
-      model: '',
-      color: '',
-    });
-  };
-
-  const handleAddVehicle = () => {
-    if (selectedApartment && newVehicle.type && newVehicle.licensePlate) {
-      const updatedApartments = apartments.map((apt) => {
-        if (apt.id === selectedApartment.id) {
-          return {
-            ...apt,
-            vehicles: [
-              ...(apt.vehicles || []),
-              {
-                id: Math.max(...(apt.vehicles?.map((v) => v.id) || [0]), 0) + 1,
-                type: newVehicle.type as 'Ô tô' | 'Xe máy',
-                licensePlate: newVehicle.licensePlate!,
-                brand: newVehicle.brand || '',
-                model: newVehicle.model || '',
-                color: newVehicle.color || '',
-              },
-            ],
-          };
-        }
-        return apt;
-      });
-      setApartments(updatedApartments);
-      handleCloseAddVehicle();
-    }
-  };
-
-  const handleOpenEditVehicle = (vehicle: Vehicle) => {
-    setEditingVehicle({ ...vehicle });
-    setEditVehicleDialogOpen(true);
-  };
-
-  const handleCloseEditVehicle = () => {
-    setEditVehicleDialogOpen(false);
-    setEditingVehicle(null);
-  };
-
-  const handleUpdateVehicle = () => {
-    if (selectedApartment && editingVehicle) {
-      const updatedApartments = apartments.map((apt) => {
-        if (apt.id === selectedApartment.id) {
-          return {
-            ...apt,
-            vehicles: apt.vehicles?.map((v) => (v.id === editingVehicle.id ? editingVehicle : v)) || [],
-          };
-        }
-        return apt;
-      });
-      setApartments(updatedApartments);
-      handleCloseEditVehicle();
-    }
-  };
-
-  const handleOpenDeleteVehicle = (vehicle: Vehicle) => {
-    setSelectedVehicle(vehicle);
-    setDeleteVehicleDialogOpen(true);
-  };
-
-  const handleCloseDeleteVehicle = () => {
-    setDeleteVehicleDialogOpen(false);
-    setSelectedVehicle(null);
-  };
-
-  const handleDeleteVehicle = () => {
-    if (selectedApartment && selectedVehicle) {
-      const updatedApartments = apartments.map((apt) => {
-        if (apt.id === selectedApartment.id) {
-          return {
-            ...apt,
-            vehicles: apt.vehicles?.filter((v) => v.id !== selectedVehicle.id) || [],
-          };
-        }
-        return apt;
-      });
-      setApartments(updatedApartments);
-      handleCloseDeleteVehicle();
-    }
-  };
-
   const handleOpenAddApartment = () => {
     setAddApartmentDialogOpen(true);
   };
@@ -267,7 +149,6 @@ const ApartmentDetailsManagement = () => {
             building: newApartment.building as 'S1' | 'S2',
             floor: newApartment.floor,
             ownerName: owner.name,
-            vehicles: [],
             numResidents: newApartment.numResidents,
             numKeys: newApartment.numKeys,
             parkingSlots: newApartment.parkingSlots,
@@ -280,48 +161,61 @@ const ApartmentDetailsManagement = () => {
     }
   };
 
-  const handleOpenAddDevice = () => {
-    if (selectedApartment) {
-      setNewDevice({ ...newDevice, apartmentId: selectedApartment.id });
-      setAddDeviceDialogOpen(true);
+  const handleOpenDeviceDialog = (device?: Device) => {
+    if (device) {
+      setEditingDevice(device);
+    } else {
+      setEditingDevice({
+        name: '',
+        type: '',
+        status: 'ACTIVE',
+        maintenanceAt: new Date().toISOString().split('T')[0],
+        description: '',
+        numberCard: '',
+        apartmentId: selectedApartment?.id || 0,
+      });
     }
+    setDeviceDialogOpen(true);
   };
 
-  const handleCloseAddDevice = () => {
-    setAddDeviceDialogOpen(false);
-    setNewDevice({
-      name: '',
-      type: '',
-      status: 'ACTIVE',
-      maintenanceAt: new Date().toISOString().split('T')[0],
-      apartmentId: 0,
-    });
+  const handleCloseDeviceDialog = () => {
+    setDeviceDialogOpen(false);
+    setEditingDevice(null);
   };
 
-  const handleAddDevice = async () => {
-    if (selectedApartment && newDevice.name && newDevice.type) {
-      try {
-        const createdDevice = await deviceService.createDevice(newDevice);
-        setDevices([...devices, createdDevice]);
-        setApartments(
-          apartments.map((apt) =>
-            apt.id === selectedApartment.id
-              ? { ...apt, deviceIds: [...apt.deviceIds, createdDevice.id] }
-              : apt
-          )
-        );
-        handleCloseAddDevice();
-      } catch (err) {
-        setError('Lỗi khi thêm thiết bị. Vui lòng thử lại.');
+  const handleSaveDevice = async () => {
+    try {
+      if (editingDevice && 'id' in editingDevice) {
+        await deviceService.updateDevice(editingDevice.id, editingDevice as NewDevice);
+      } else if (editingDevice) {
+        await deviceService.createDevice(editingDevice as NewDevice);
       }
+      handleCloseDeviceDialog();
+      if (selectedApartment) {
+        const updatedDevices = await Promise.all(
+          selectedApartment.deviceIds.map((id) => deviceService.getDeviceById(id))
+        );
+        setDevices(updatedDevices);
+      }
+    } catch (err) {
+      setError('Lỗi khi lưu thiết bị. Vui lòng thử lại.');
     }
   };
 
-  const getVehicleSummary = (vehicles: Vehicle[] | undefined) => {
-    if (!vehicles) return '0 xe';
-    const cars = vehicles.filter((v) => v.type === 'Ô tô').length;
-    const bikes = vehicles.filter((v) => v.type === 'Xe máy').length;
-    return `${cars} ô tô, ${bikes} xe máy`;
+  const handleDeleteDevice = async (device: Device) => {
+    try {
+      await deviceService.deleteDevice(device.id);
+      if (selectedApartment) {
+        const updatedDevices = await Promise.all(
+          selectedApartment.deviceIds
+            .filter((id) => id !== device.id)
+            .map((id) => deviceService.getDeviceById(id))
+        );
+        setDevices(updatedDevices);
+      }
+    } catch (err) {
+      setError('Lỗi khi xóa thiết bị. Vui lòng thử lại.');
+    }
   };
 
   if (loading) {
@@ -357,7 +251,6 @@ const ApartmentDetailsManagement = () => {
             <TableRow>
               <TableCell>Căn hộ</TableCell>
               <TableCell>Chủ căn hộ</TableCell>
-              <TableCell>Số lượng xe</TableCell>
               <TableCell>Ghi chú</TableCell>
               <TableCell align="right">Thao tác</TableCell>
             </TableRow>
@@ -369,7 +262,6 @@ const ApartmentDetailsManagement = () => {
                   {apartment.building} - {apartment.name}
                 </TableCell>
                 <TableCell>{apartment.ownerName}</TableCell>
-                <TableCell>{getVehicleSummary(apartment.vehicles)}</TableCell>
                 <TableCell>{apartment.description}</TableCell>
                 <TableCell align="right">
                   <IconButton color="primary" onClick={() => handleOpenDetails(apartment)}>
@@ -388,13 +280,12 @@ const ApartmentDetailsManagement = () => {
       <ApartmentDetailsDialog
         open={detailsOpen}
         apartment={selectedApartment}
-        devices={devices.filter((d) => selectedApartment?.deviceIds.includes(d.id))}
+        devices={devices}
         onClose={handleCloseDetails}
         onSave={handleCloseDetails}
-        onAddVehicle={handleOpenAddVehicle}
-        onEditVehicle={handleOpenEditVehicle}
-        onDeleteVehicle={handleOpenDeleteVehicle}
-        onAddDevice={handleOpenAddDevice}
+        onAddDevice={() => handleOpenDeviceDialog()}
+        onEditDevice={(device) => handleOpenDeviceDialog(device)}
+        onDeleteDevice={handleDeleteDevice}
       />
 
       <AddApartmentDialog
@@ -412,35 +303,12 @@ const ApartmentDetailsManagement = () => {
         onDelete={handleDelete}
       />
 
-      <AddVehicleDialog
-        open={addVehicleDialogOpen}
-        newVehicle={newVehicle}
-        setNewVehicle={setNewVehicle}
-        onClose={handleCloseAddVehicle}
-        onAdd={handleAddVehicle}
-      />
-
-      <EditVehicleDialog
-        open={editVehicleDialogOpen}
-        vehicle={editingVehicle}
-        setVehicle={setEditingVehicle}
-        onClose={handleCloseEditVehicle}
-        onSave={handleUpdateVehicle}
-      />
-
-      <DeleteVehicleDialog
-        open={deleteVehicleDialogOpen}
-        vehicle={selectedVehicle}
-        onClose={handleCloseDeleteVehicle}
-        onDelete={handleDeleteVehicle}
-      />
-
-      <AddDeviceDialog
-        open={addDeviceDialogOpen}
-        newDevice={newDevice}
-        setNewDevice={setNewDevice}
-        onClose={handleCloseAddDevice}
-        onAdd={handleAddDevice}
+      <DeviceDialog
+        open={deviceDialogOpen}
+        device={editingDevice}
+        setDevice={setEditingDevice}
+        onClose={handleCloseDeviceDialog}
+        onSave={handleSaveDevice}
       />
     </Box>
   );
