@@ -24,14 +24,15 @@ import {
 } from '@mui/material';
 import { Search as SearchIcon, Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import FeeDialog from '../../components/admin/FeeDialog';
-import { Fee, NewFee } from '../../types/admin/FeeManagementType';
+import { FeeDTO } from '../../types/fee';
 import { managementFeeService } from '../../services/admin/ManagementFeeService';
 import { managementFeeTypeService } from '../../services/admin/ManagementFeeTypeService';
+import { managementApartmentService } from '../../services/admin/ManagementApartmentService';
 
 interface FeeRecord {
   id: number;
   stt: number;
-  tenChuHo: string;
+  tenCanHo: string; // Thay tenChuHo thành tenCanHo
   tenDichVu: string;
   loaiDichVu: string;
   hanDong: string;
@@ -40,8 +41,22 @@ interface FeeRecord {
   building?: 's1' | 's2';
 }
 
+interface Apartment {
+  id: number;
+  name: string;
+  building?: 's1' | 's2';
+}
+
+interface FeeType {
+  id: number;
+  name: string;
+  category: string;
+}
+
 const FeeManagementPage = () => {
-  const [fees, setFees] = useState<Fee[]>([]);
+  const [fees, setFees] = useState<FeeDTO[]>([]);
+  const [apartments, setApartments] = useState<Apartment[]>([]);
+  const [feeTypes, setFeeTypes] = useState<FeeType[]>([]);
   const [selectedBuilding, setSelectedBuilding] = useState('all');
   const [selectedMonth, setSelectedMonth] = useState('');
   const [selectedYear, setSelectedYear] = useState('2025');
@@ -49,8 +64,7 @@ const FeeManagementPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [openDialog, setOpenDialog] = useState(false);
-  const [selectedFee, setSelectedFee] = useState<Fee | NewFee | null>(null);
-  const [feeTypes, setFeeTypes] = useState<Array<{ id: number; name: string }>>([]);
+  const [selectedFee, setSelectedFee] = useState<FeeDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const ITEMS_PER_PAGE = 5;
@@ -59,14 +73,14 @@ const FeeManagementPage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [feesData, feeTypesData] = await Promise.all([
+        const [feesData, feeTypesData, apartmentsData] = await Promise.all([
           managementFeeService.getAllFees(),
           managementFeeTypeService.getAllFeeTypes(),
+          managementApartmentService.getAllApartments(),
         ]);
-        console.log('Fees Data:', feesData);
-        console.log('Fee Types Data:', feeTypesData);
         setFees(Array.isArray(feesData) ? feesData : []);
         setFeeTypes(Array.isArray(feeTypesData) ? feeTypesData : []);
+        setApartments(Array.isArray(apartmentsData) ? apartmentsData : []);
         setError(null);
       } catch (error) {
         console.error('Lỗi tải dữ liệu:', error);
@@ -78,16 +92,24 @@ const FeeManagementPage = () => {
     fetchData();
   }, []);
 
-  const handleOpenDialog = (fee?: Fee) => {
+  const handleOpenDialog = (fee?: FeeDTO) => {
     setSelectedFee(
         fee
             ? { ...fee }
             : {
-              resident: { id: 0 },
-              feeType: { id: 0 },
+              id: null,
+              apartmentId: null,
+              feeTypeId: null,
+              residentId: null,
               amount: 0,
               dueDate: null,
+              paymentDate: null,
+              status: 'UNPAID',
               description: null,
+              stripePaymentIntentId: null,
+              stripePaymentStatus: null,
+              createdAt: null,
+              updatedAt: null,
             }
     );
     setOpenDialog(true);
@@ -101,7 +123,7 @@ const FeeManagementPage = () => {
   const handleSaveFee = async () => {
     if (!selectedFee) return;
     try {
-      if ('id' in selectedFee) {
+      if (selectedFee.id) {
         await managementFeeService.updateFee(selectedFee.id, selectedFee);
       } else {
         await managementFeeService.createFee(selectedFee);
@@ -125,7 +147,7 @@ const FeeManagementPage = () => {
     }
   };
 
-  const mapStatusToTinhTrang = (status: Fee['status']): FeeRecord['tinhTrang'] => {
+  const mapStatusToTinhTrang = (status: FeeDTO['status']): FeeRecord['tinhTrang'] => {
     switch (status) {
       case 'PAID':
         return 'Đã đóng';
@@ -140,21 +162,23 @@ const FeeManagementPage = () => {
 
   const filteredFees = useMemo(() => {
     return fees.filter((fee) => {
+      const apartment = apartments.find((apt) => apt.id === fee.apartmentId);
+      const feeType = feeTypes.find((ft) => ft.id === fee.feeTypeId);
       const record = {
-        tenChuHo: fee.resident?.name || 'Không xác định',
-        tenDichVu: fee.feeType?.name || 'Không xác định',
+        tenCanHo: apartment ? apartment.name : 'Không xác định',
+        tenDichVu: feeType ? feeType.name : 'Không xác định',
         hanDong: fee.dueDate
             ? new Date(fee.dueDate).toLocaleDateString('vi-VN')
             : 'Không xác định',
       };
 
       const matchesSearch = searchQuery
-          ? record.tenChuHo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          ? record.tenCanHo.toLowerCase().includes(searchQuery.toLowerCase()) ||
           record.tenDichVu.toLowerCase().includes(searchQuery.toLowerCase())
           : true;
-      const matchesBuilding = selectedBuilding === 'all' ? true : fee.resident?.building === selectedBuilding;
+      const matchesBuilding = selectedBuilding === 'all' ? true : apartment?.building === selectedBuilding;
       const matchesService = selectedService
-          ? fee.feeType?.name === selectedService
+          ? feeType?.name === selectedService
           : true;
       const matchesMonth = selectedMonth
           ? record.hanDong !== 'Không xác định' &&
@@ -165,43 +189,35 @@ const FeeManagementPage = () => {
           new Date(fee.dueDate).getFullYear() === parseInt(selectedYear)
           : true;
 
-      return (
-          matchesSearch &&
-          matchesBuilding &&
-          matchesService &&
-          matchesMonth &&
-          matchesYear
-      );
+      return matchesSearch && matchesBuilding && matchesService && matchesMonth && matchesYear;
     });
-  }, [fees, searchQuery, selectedBuilding, selectedService, selectedMonth, selectedYear]);
+  }, [fees, apartments, feeTypes, searchQuery, selectedBuilding, selectedService, selectedMonth, selectedYear]);
 
   const feeRecords: FeeRecord[] = useMemo(() => {
-    console.log('Raw Fees:', filteredFees);
-    const records = filteredFees
-        .filter((fee) => !!fee.resident && !!fee.feeType && !!fee.dueDate)
-        .map((fee, index) => ({
-          id: fee.id,
-          stt: index + 1,
-          tenChuHo: fee.resident?.name || 'Không xác định',
-          tenDichVu: fee.feeType?.name || 'Không xác định',
-          loaiDichVu: fee.feeType?.category || 'Không xác định',
-          hanDong: fee.dueDate
-              ? new Date(fee.dueDate).toLocaleDateString('vi-VN')
-              : 'Không xác định',
-          soTien: fee.amount || 0,
-          tinhTrang: mapStatusToTinhTrang(fee.status),
-          building: fee.resident?.building,
-        }));
-    console.log('Fee Records:', records);
-    return records;
-  }, [filteredFees]);
+    return filteredFees
+        .filter((fee) => !!fee.apartmentId && !!fee.feeTypeId && !!fee.dueDate)
+        .map((fee, index) => {
+          const apartment = apartments.find((apt) => apt.id === fee.apartmentId);
+          const feeType = feeTypes.find((ft) => ft.id === fee.feeTypeId);
+          return {
+            id: fee.id,
+            stt: index + 1,
+            tenCanHo: apartment ? apartment.name : 'Không xác định',
+            tenDichVu: feeType ? feeType.name : 'Không xác định',
+            loaiDichVu: feeType ? feeType.category : 'Không xác định',
+            hanDong: fee.dueDate
+                ? new Date(fee.dueDate).toLocaleDateString('vi-VN')
+                : 'Không xác định',
+            soTien: fee.amount || 0,
+            tinhTrang: mapStatusToTinhTrang(fee.status),
+            building: apartment?.building,
+          };
+        });
+  }, [filteredFees, apartments, feeTypes]);
 
   const totalPages = Math.ceil(feeRecords.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedRecords = feeRecords.slice(
-      startIndex,
-      startIndex + ITEMS_PER_PAGE
-  );
+  const paginatedRecords = feeRecords.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -246,11 +262,7 @@ const FeeManagementPage = () => {
                 value={selectedBuilding}
                 onChange={(e) => setSelectedBuilding(e.target.value)}
             >
-              <FormControlLabel
-                  value="all"
-                  control={<Radio />}
-                  label="Cả 2 chung cư"
-              />
+              <FormControlLabel value="all" control={<Radio />} label="Cả 2 chung cư" />
               <FormControlLabel value="s1" control={<Radio />} label="S1" />
               <FormControlLabel value="s2" control={<Radio />} label="S2" />
             </RadioGroup>
@@ -315,14 +327,12 @@ const FeeManagementPage = () => {
             <Box sx={{ flexGrow: 1 }} />
 
             <TextField
-                placeholder="Tên chủ hộ, tên dịch vụ"
+                placeholder="Tên căn hộ, tên dịch vụ"
                 size="small"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 InputProps={{
-                  startAdornment: (
-                      <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                  ),
+                  startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
                 }}
                 sx={{ width: 300 }}
             />
@@ -335,7 +345,7 @@ const FeeManagementPage = () => {
               <TableHead>
                 <TableRow>
                   <TableCell>STT</TableCell>
-                  <TableCell>Tên chủ hộ</TableCell>
+                  <TableCell>Tên căn hộ</TableCell>
                   <TableCell>Tên dịch vụ</TableCell>
                   <TableCell>Loại dịch vụ</TableCell>
                   <TableCell>Hạn đóng</TableCell>
@@ -355,7 +365,7 @@ const FeeManagementPage = () => {
                     paginatedRecords.map((record) => (
                         <TableRow key={record.id}>
                           <TableCell>{record.stt}</TableCell>
-                          <TableCell>{record.tenChuHo}</TableCell>
+                          <TableCell>{record.tenCanHo}</TableCell>
                           <TableCell>{record.tenDichVu}</TableCell>
                           <TableCell>{record.loaiDichVu}</TableCell>
                           <TableCell>{record.hanDong}</TableCell>
@@ -389,9 +399,7 @@ const FeeManagementPage = () => {
                           </TableCell>
                           <TableCell>
                             <IconButton
-                                onClick={() =>
-                                    handleOpenDialog(fees.find((f) => f.id === record.id))
-                                }
+                                onClick={() => handleOpenDialog(fees.find((f) => f.id === record.id))}
                             >
                               <EditIcon />
                             </IconButton>

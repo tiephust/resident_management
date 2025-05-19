@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+// components/admin/DeviceManagement.tsx
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -10,53 +11,44 @@ import {
   TableHead,
   TableRow,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
   IconButton,
   Chip,
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
-
-interface Device {
-  id: number;
-  name: string;
-  type: string;
-  status: 'Hoạt động' | 'Bảo trì' | 'Hỏng';
-  location: string;
-  lastMaintenance: string;
-}
+import DeviceDialog from '../../components/admin/DeviceDialog';
+import { Device, NewDevice } from '../../types/admin/DeviceManagementType';
+import { deviceService } from '../../services/deviceService';
 
 const DeviceManagement = () => {
-  const [devices, setDevices] = useState<Device[]>([
-    {
-      id: 1,
-      name: 'Máy bơm nước',
-      type: 'Thiết bị điện',
-      status: 'Hoạt động',
-      location: 'Tầng hầm - S1',
-      lastMaintenance: '15/02/2024',
-    },
-    {
-      id: 2,
-      name: 'Camera an ninh',
-      type: 'Thiết bị giám sát',
-      status: 'Hoạt động',
-      location: 'Sảnh - S1',
-      lastMaintenance: '20/02/2024',
-    },
-  ]);
-
+  const [devices, setDevices] = useState<Device[]>([]);
   const [open, setOpen] = useState(false);
-  const [editingDevice, setEditingDevice] = useState<Device | null>(null);
+  const [editingDevice, setEditingDevice] = useState<Device | NewDevice | null>(null);
+
+  useEffect(() => {
+    loadDevices();
+  }, []);
+
+  const loadDevices = async () => {
+    try {
+      const data = await deviceService.getAllDevices();
+      setDevices(data);
+    } catch (error) {
+      console.error('Error loading devices:', error);
+    }
+  };
 
   const handleOpen = (device?: Device) => {
     if (device) {
       setEditingDevice(device);
     } else {
-      setEditingDevice(null);
+      setEditingDevice({
+        name: '',
+        type: '',
+        status: 'ACTIVE',
+        maintenanceAt: new Date().toISOString().split('T')[0],
+        description: '',
+        numberCard: '',
+      });
     }
     setOpen(true);
   };
@@ -66,13 +58,47 @@ const DeviceManagement = () => {
     setEditingDevice(null);
   };
 
+  const handleSave = async () => {
+    try {
+      if (editingDevice && 'id' in editingDevice) {
+        // editingDevice is of type Device (has id)
+        await deviceService.updateDevice(editingDevice.id, editingDevice as NewDevice);
+      } else if (editingDevice) {
+        // editingDevice is of type NewDevice (no id)
+        await deviceService.createDevice(editingDevice as NewDevice);
+      }
+      handleClose();
+      loadDevices();
+    } catch (error) {
+      console.error('Error saving device:', error);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await deviceService.deleteDevice(id);
+      loadDevices();
+    } catch (error) {
+      console.error('Error deleting device:', error);
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'ACTIVE': return 'Hoạt động';
+      case 'MAINTENANCE': return 'Bảo trì';
+      case 'BROKEN': return 'Hỏng';
+      default: return 'Hoạt động';
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Hoạt động':
+      case 'ACTIVE':
         return { bg: '#E8F5E9', color: '#2E7D32' };
-      case 'Bảo trì':
+      case 'MAINTENANCE':
         return { bg: '#FFF3E0', color: '#E65100' };
-      case 'Hỏng':
+      case 'BROKEN':
         return { bg: '#FFEBEE', color: '#C62828' };
       default:
         return { bg: '#E8F5E9', color: '#2E7D32' };
@@ -80,103 +106,73 @@ const DeviceManagement = () => {
   };
 
   return (
-    <Box sx={{ p: 3, bgcolor: '#F5F7FA', minHeight: '100vh' }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5" fontWeight="bold">
-          Quản lý thiết bị
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpen()}
-        >
-          Thêm thiết bị
-        </Button>
-      </Box>
-
-      <Paper sx={{ borderRadius: 2, overflow: 'hidden' }}>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Tên thiết bị</TableCell>
-                <TableCell>Loại</TableCell>
-                <TableCell>Trạng thái</TableCell>
-                <TableCell>Vị trí</TableCell>
-                <TableCell>Bảo trì gần nhất</TableCell>
-                <TableCell align="right">Thao tác</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {devices.map((device) => (
-                <TableRow key={device.id}>
-                  <TableCell>{device.name}</TableCell>
-                  <TableCell>{device.type}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={device.status}
-                      sx={{
-                        bgcolor: getStatusColor(device.status).bg,
-                        color: getStatusColor(device.status).color,
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell>{device.location}</TableCell>
-                  <TableCell>{device.lastMaintenance}</TableCell>
-                  <TableCell align="right">
-                    <IconButton onClick={() => handleOpen(device)} color="primary">
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton color="error">
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
-
-      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {editingDevice ? 'Chỉnh sửa thiết bị' : 'Thêm thiết bị mới'}
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
-            <TextField
-              label="Tên thiết bị"
-              fullWidth
-              defaultValue={editingDevice?.name}
-            />
-            <TextField
-              label="Loại thiết bị"
-              fullWidth
-              defaultValue={editingDevice?.type}
-            />
-            <TextField
-              label="Vị trí"
-              fullWidth
-              defaultValue={editingDevice?.location}
-            />
-            <TextField
-              label="Ngày bảo trì gần nhất"
-              fullWidth
-              type="date"
-              defaultValue={editingDevice?.lastMaintenance}
-              InputLabelProps={{ shrink: true }}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Hủy</Button>
-          <Button variant="contained" onClick={handleClose}>
-            {editingDevice ? 'Lưu thay đổi' : 'Thêm'}
+      <Box sx={{ p: 3, bgcolor: '#F5F7FA', minHeight: '100vh' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h5" fontWeight="bold">
+            Quản lý thiết bị
+          </Typography>
+          <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => handleOpen()}
+          >
+            Thêm thiết bị
           </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        </Box>
+
+        <Paper sx={{ borderRadius: 2, overflow: 'hidden' }}>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Tên thiết bị</TableCell>
+                  <TableCell>Loại</TableCell>
+                  <TableCell>Trạng thái</TableCell>
+                  <TableCell>Số thẻ</TableCell>
+                  <TableCell>Bảo trì gần nhất</TableCell>
+                  <TableCell align="right">Thao tác</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {devices.map((device) => (
+                    <TableRow key={device.id}>
+                      <TableCell>{device.name}</TableCell>
+                      <TableCell>{device.type}</TableCell>
+                      <TableCell>
+                        <Chip
+                            label={getStatusLabel(device.status)}
+                            sx={{
+                              bgcolor: getStatusColor(device.status).bg,
+                              color: getStatusColor(device.status).color,
+                            }}
+                        />
+                      </TableCell>
+                      <TableCell>{device.numberCard || '-'}</TableCell>
+                      <TableCell>{device.maintenanceAt}</TableCell>
+                      <TableCell align="right">
+                        <IconButton onClick={() => handleOpen(device)} color="primary">
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton onClick={() => handleDelete(device.id)} color="error">
+                          <DeleteIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+
+        <DeviceDialog
+            open={open}
+            device={editingDevice}
+            setDevice={setEditingDevice}
+            onClose={handleClose}
+            onSave={handleSave}
+        />
+      </Box>
   );
 };
 
-export default DeviceManagement; 
+export default DeviceManagement;

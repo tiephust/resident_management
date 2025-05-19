@@ -15,14 +15,14 @@ import {
     Alert,
     CircularProgress,
 } from '@mui/material';
-import { Fee, NewFee } from '../../types/admin/FeeManagementType';
+import { FeeDTO } from '../../types/fee';
 import { managementFeeTypeService } from '../../services/admin/ManagementFeeTypeService';
-import { managementResidentService } from '../../services/admin/ManagementResidentService';
+import { managementApartmentService } from '../../services/admin/managementApartmentService'; // Giả định service này tồn tại
 
 interface FeeDialogProps {
     open: boolean;
-    fee: Fee | NewFee | null;
-    setFee: React.Dispatch<React.SetStateAction<Fee | NewFee | null>>;
+    fee: FeeDTO | null;
+    setFee: React.Dispatch<React.SetStateAction<FeeDTO | null>>;
     onClose: () => void;
     onSave: () => void;
 }
@@ -34,7 +34,7 @@ const FeeDialog: React.FC<FeeDialogProps> = ({
                                                  onClose,
                                                  onSave,
                                              }) => {
-    const [residents, setResidents] = useState<Array<{ id: number; name: string }>>([]);
+    const [apartments, setApartments] = useState<Array<{ id: number; name: string }>>([]);
     const [feeTypes, setFeeTypes] = useState<Array<{ id: number; name: string; pricePerUnit: number }>>([]);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -44,12 +44,11 @@ const FeeDialog: React.FC<FeeDialogProps> = ({
             try {
                 setLoading(true);
                 setError(null);
-                const [residentsData, feeTypesData] = await Promise.all([
-                    managementResidentService.getAllResidents(),
+                const [apartmentsData, feeTypesData] = await Promise.all([
+                    managementApartmentService.getAllApartments(), // Giả định service này trả về danh sách apartments
                     managementFeeTypeService.getAllFeeTypes(),
                 ]);
-                // Đảm bảo residentsData là mảng
-                setResidents(Array.isArray(residentsData) ? residentsData : []);
+                setApartments(Array.isArray(apartmentsData) ? apartmentsData : []);
                 setFeeTypes(Array.isArray(feeTypesData) ? feeTypesData : []);
             } catch (error) {
                 console.error('Lỗi tải dữ liệu:', error);
@@ -68,7 +67,7 @@ const FeeDialog: React.FC<FeeDialogProps> = ({
         if (selectedFeeType && fee) {
             setFee({
                 ...fee,
-                feeType: { id: feeTypeId },
+                feeTypeId,
                 amount: selectedFeeType.pricePerUnit,
             });
         }
@@ -79,11 +78,11 @@ const FeeDialog: React.FC<FeeDialogProps> = ({
             setError('Dữ liệu khoản phí không hợp lệ');
             return false;
         }
-        if (!fee.resident?.id) {
-            setError('Vui lòng chọn cư dân');
+        if (!fee.apartmentId) {
+            setError('Vui lòng chọn căn hộ');
             return false;
         }
-        if (!fee.feeType?.id) {
+        if (!fee.feeTypeId) {
             setError('Vui lòng chọn loại phí');
             return false;
         }
@@ -104,10 +103,13 @@ const FeeDialog: React.FC<FeeDialogProps> = ({
         }
     };
 
+    // Kiểm tra xem fee có id hay không (tức là chỉnh sửa hay thêm mới)
+    const hasId = fee && fee.id;
+
     return (
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
             <DialogTitle>
-                {fee && 'id' in fee ? 'Chỉnh sửa khoản phí' : 'Thêm khoản phí mới'}
+                {hasId ? 'Chỉnh sửa khoản phí' : 'Thêm khoản phí mới'}
             </DialogTitle>
             <DialogContent>
                 {loading ? (
@@ -123,25 +125,25 @@ const FeeDialog: React.FC<FeeDialogProps> = ({
                         )}
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
                             <FormControl fullWidth>
-                                <InputLabel>Cư dân</InputLabel>
+                                <InputLabel>Căn hộ</InputLabel>
                                 <Select
-                                    value={fee?.resident?.id || ''}
-                                    label="Cư dân"
+                                    value={fee?.apartmentId || ''}
+                                    label="Căn hộ"
                                     onChange={(e) =>
                                         setFee((prev) =>
-                                            prev ? { ...prev, resident: { id: e.target.value as number } } : null
+                                            prev ? { ...prev, apartmentId: e.target.value as number } : null
                                         )
                                     }
                                     disabled={loading}
                                 >
-                                    {Array.isArray(residents) && residents.length > 0 ? (
-                                        residents.map((resident) => (
-                                            <MenuItem key={resident.id} value={resident.id}>
-                                                {resident.name}
+                                    {Array.isArray(apartments) && apartments.length > 0 ? (
+                                        apartments.map((apartment) => (
+                                            <MenuItem key={apartment.id} value={apartment.id}>
+                                                {apartment.name}
                                             </MenuItem>
                                         ))
                                     ) : (
-                                        <MenuItem disabled>Không có cư dân</MenuItem>
+                                        <MenuItem disabled>Không có căn hộ</MenuItem>
                                     )}
                                 </Select>
                             </FormControl>
@@ -149,7 +151,7 @@ const FeeDialog: React.FC<FeeDialogProps> = ({
                             <FormControl fullWidth>
                                 <InputLabel>Loại phí</InputLabel>
                                 <Select
-                                    value={fee?.feeType?.id || ''}
+                                    value={fee?.feeTypeId || ''}
                                     label="Loại phí"
                                     onChange={(e) => handleFeeTypeChange(e.target.value as number)}
                                     disabled={loading}
@@ -186,10 +188,10 @@ const FeeDialog: React.FC<FeeDialogProps> = ({
                                 label="Hạn đóng"
                                 type="date"
                                 fullWidth
-                                value={fee?.dueDate ? new Date(fee.dueDate).toISOString().split('T')[0] : ''}
+                                value={fee?.dueDate ? fee.dueDate.toISOString().split('T')[0] : ''}
                                 onChange={(e) =>
                                     setFee((prev) =>
-                                        prev ? { ...prev, dueDate: e.target.value } : null
+                                        prev ? { ...prev, dueDate: new Date(e.target.value) } : null
                                     )
                                 }
                                 InputLabelProps={{
@@ -197,6 +199,40 @@ const FeeDialog: React.FC<FeeDialogProps> = ({
                                 }}
                                 disabled={loading}
                             />
+
+                            <TextField
+                                label="Ngày thanh toán"
+                                type="date"
+                                fullWidth
+                                value={fee?.paymentDate ? fee.paymentDate.toISOString().split('T')[0] : ''}
+                                onChange={(e) =>
+                                    setFee((prev) =>
+                                        prev ? { ...prev, paymentDate: e.target.value ? new Date(e.target.value) : null } : null
+                                    )
+                                }
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                                disabled={loading}
+                            />
+
+                            <FormControl fullWidth>
+                                <InputLabel>Trạng thái</InputLabel>
+                                <Select
+                                    value={fee?.status || ''}
+                                    label="Trạng thái"
+                                    onChange={(e) =>
+                                        setFee((prev) =>
+                                            prev ? { ...prev, status: e.target.value as string } : null
+                                        )
+                                    }
+                                    disabled={loading}
+                                >
+                                    <MenuItem value="PAID">Đã đóng</MenuItem>
+                                    <MenuItem value="UNPAID">Chưa đóng</MenuItem>
+                                    <MenuItem value="OVERDUE">Quá hạn</MenuItem>
+                                </Select>
+                            </FormControl>
 
                             <TextField
                                 label="Mô tả"
@@ -211,6 +247,51 @@ const FeeDialog: React.FC<FeeDialogProps> = ({
                                 }
                                 disabled={loading}
                             />
+
+                            <TextField
+                                label="Stripe Payment Intent ID"
+                                fullWidth
+                                value={fee?.stripePaymentIntentId || ''}
+                                onChange={(e) =>
+                                    setFee((prev) =>
+                                        prev ? { ...prev, stripePaymentIntentId: e.target.value || null } : null
+                                    )
+                                }
+                                disabled={loading}
+                            />
+
+                            <TextField
+                                label="Trạng thái thanh toán Stripe"
+                                fullWidth
+                                value={fee?.stripePaymentStatus || ''}
+                                onChange={(e) =>
+                                    setFee((prev) =>
+                                        prev ? { ...prev, stripePaymentStatus: e.target.value || null } : null
+                                    )
+                                }
+                                disabled={loading}
+                            />
+
+                            {hasId && (
+                                <>
+                                    <TextField
+                                        label="Ngày tạo"
+                                        fullWidth
+                                        value={fee?.createdAt ? fee.createdAt.toISOString().split('T')[0] : ''}
+                                        InputProps={{ readOnly: true }}
+                                        InputLabelProps={{ shrink: true }}
+                                        disabled
+                                    />
+                                    <TextField
+                                        label="Ngày cập nhật"
+                                        fullWidth
+                                        value={fee?.updatedAt ? fee.updatedAt.toISOString().split('T')[0] : ''}
+                                        InputProps={{ readOnly: true }}
+                                        InputLabelProps={{ shrink: true }}
+                                        disabled
+                                    />
+                                </>
+                            )}
                         </Box>
                     </>
                 )}
@@ -220,7 +301,7 @@ const FeeDialog: React.FC<FeeDialogProps> = ({
                     Hủy
                 </Button>
                 <Button variant="contained" onClick={handleSave} disabled={loading}>
-                    {fee && 'id' in fee ? 'Lưu thay đổi' : 'Thêm'}
+                    {hasId ? 'Lưu thay đổi' : 'Thêm'}
                 </Button>
             </DialogActions>
         </Dialog>
