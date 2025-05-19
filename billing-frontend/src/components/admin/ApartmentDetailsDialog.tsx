@@ -110,6 +110,26 @@ const ApartmentDetailsDialog: React.FC<ApartmentDetailsDialogProps> = ({
         }
     };
 
+    const handleApartmentNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (apartment) {
+            const updatedApartment = {
+                ...apartment,
+                name: event.target.value
+            };
+            onUpdateApartment(updatedApartment);
+        }
+    };
+
+    const handleApartmentDescriptionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (apartment) {
+            const updatedApartment = {
+                ...apartment,
+                description: event.target.value
+            };
+            onUpdateApartment(updatedApartment);
+        }
+    };
+
     const handleOpenAddDialog = () => {
         setSelectedResident({
             name: '',
@@ -298,17 +318,26 @@ const ApartmentDetailsDialog: React.FC<ApartmentDetailsDialogProps> = ({
                             <TextField
                                 label="Tên căn hộ"
                                 fullWidth
-                                value={apartment?.name}
-                                // disabled
+                                required
+                                value={apartment?.name || ''}
+                                onChange={handleApartmentNameChange}
                             />
                         </Grid>
                         <Grid item xs={12}>
-                            <FormControl fullWidth>
+                            <FormControl fullWidth required>
                                 <InputLabel>Chủ căn hộ</InputLabel>
                                 <Select
                                     value={apartment?.apartmentOwnerId || ''}
                                     label="Chủ căn hộ"
-                                    onChange={handleApartmentOwnerChange}
+                                    onChange={(e) => {
+                                        if (apartment) {
+                                            const updatedApartment = {
+                                                ...apartment,
+                                                apartmentOwnerId: e.target.value as number
+                                            };
+                                            onUpdateApartment(updatedApartment);
+                                        }
+                                    }}
                                 >
                                     {residents.map((resident) => (
                                         <MenuItem key={resident.id} value={resident.id}>
@@ -563,14 +592,18 @@ const ApartmentDetailsDialog: React.FC<ApartmentDetailsDialogProps> = ({
                         multiline
                         rows={4}
                         value={apartment?.description || ''}
-                        // disabled
+                        onChange={handleApartmentDescriptionChange}
                         sx={{ mt: 2 }}
                     />
                 )}
             </DialogContent>
             <DialogActions>
                 <Button onClick={onClose}>Đóng</Button>
-                <Button variant="contained" onClick={onSave}>
+                <Button 
+                    variant="contained" 
+                    onClick={onSave}
+                    disabled={!apartment?.name || !apartment?.apartmentOwnerId}
+                >
                     Lưu thay đổi
                 </Button>
             </DialogActions>

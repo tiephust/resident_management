@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -7,8 +7,14 @@ import {
     Grid,
     TextField,
     Button,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
 } from '@mui/material';
 import { NewApartmentDTO } from '../../../types/admin/ApartmentServiceType';
+import { Resident } from '../../../types/admin/ResidentManagementType';
+import { managementResidentService } from '../../../services/admin/ManagementResidentService';
 
 interface AddApartmentDialogProps {
     open: boolean;
@@ -25,6 +31,22 @@ const AddApartmentDialog: React.FC<AddApartmentDialogProps> = ({
     onClose,
     onAdd,
 }) => {
+    const [residents, setResidents] = useState<Resident[]>([]);
+
+    useEffect(() => {
+        const loadResidents = async () => {
+            if (open) {
+                try {
+                    const data = await managementResidentService.getAllResidents();
+                    setResidents(data);
+                } catch (error) {
+                    console.error('Error loading residents:', error);
+                }
+            }
+        };
+        loadResidents();
+    }, [open]);
+
     return (
         <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
             <DialogTitle>Thêm căn hộ mới</DialogTitle>
@@ -40,14 +62,23 @@ const AddApartmentDialog: React.FC<AddApartmentDialogProps> = ({
                         />
                     </Grid>
                     <Grid item xs={12}>
-                        <TextField
-                            label="ID chủ căn hộ"
-                            fullWidth
-                            type="number"
-                            required
-                            value={newApartment.apartmentOwnerId}
-                            onChange={(e) => setNewApartment({ ...newApartment, apartmentOwnerId: Number(e.target.value) })}
-                        />
+                        <FormControl fullWidth required>
+                            <InputLabel>Chủ căn hộ</InputLabel>
+                            <Select
+                                value={newApartment.apartmentOwnerId || ''}
+                                label="Chủ căn hộ"
+                                onChange={(e) => setNewApartment({ 
+                                    ...newApartment, 
+                                    apartmentOwnerId: e.target.value as number 
+                                })}
+                            >
+                                {residents.map((resident) => (
+                                    <MenuItem key={resident.id} value={resident.id}>
+                                        {resident.name} - {resident.email}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
                     </Grid>
                     <Grid item xs={12}>
                         <TextField
@@ -55,6 +86,7 @@ const AddApartmentDialog: React.FC<AddApartmentDialogProps> = ({
                             fullWidth
                             multiline
                             rows={3}
+                            required
                             value={newApartment.description || ''}
                             onChange={(e) => setNewApartment({ ...newApartment, description: e.target.value })}
                         />
@@ -66,7 +98,7 @@ const AddApartmentDialog: React.FC<AddApartmentDialogProps> = ({
                 <Button
                     variant="contained"
                     onClick={onAdd}
-                    disabled={!newApartment.name || !newApartment.apartmentOwnerId}
+                    disabled={!newApartment.name || !newApartment.apartmentOwnerId || !newApartment.description}
                 >
                     Thêm
                 </Button>

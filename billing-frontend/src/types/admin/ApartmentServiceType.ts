@@ -1,17 +1,30 @@
 export interface ApartmentDTO {
     id: number;
+    name: string;
+    description: string;
+    apartmentOwnerId: number;
     feeIds: number[];
     residentIds: number[];
     deviceIds: number[];
-    name: string;
-    apartmentOwnerId: number;
-    description: string | null;
-    createdAt: string | null;
-    updatedAt: string | null;
+    createdAt: string;
+    updatedAt: string;
 }
 
 export interface NewApartmentDTO {
     name: string;
+    description: string;
     apartmentOwnerId: number;
-    description?: string | null;
+}
+
+export interface Device {
+    id: number;
+    name: string;
+    apartmentId: number;
+    type: string;
+    numberCard: string;
+    description: string;
+    createdAt: string;
+    updatedAt: string;
+    maintenanceAt: string;
+    status: 'ACTIVE' | 'MAINTENANCE' | 'BROKEN';
 }

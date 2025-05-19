@@ -60,6 +60,7 @@ public class ResidentService {
 
     public List<ResidentDTO> getAllResidents() {
         return residentRepository.findAll().stream()
+                .filter(resident -> resident.getDeletedAt() == null)
                 .map(ResidentMapper::toDTO)
                 .collect(Collectors.toList());
     }

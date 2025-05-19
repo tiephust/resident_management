@@ -51,8 +51,8 @@ const DeviceDialog: React.FC<DeviceDialogProps> = ({
         const apartment = apartments.find(a => a.id === apartmentId);
         if (!apartment) return '';
 
-        const residentCount = apartment.residentIds.length;
-        const deviceCount = apartment.deviceIds.length;
+        const residentCount = apartment.residentIds?.length || 0;
+        const deviceCount = apartment.deviceIds?.length || 0;
         return `${apartment.name} (${residentCount} cư dân, ${deviceCount} thiết bị)`;
     };
 
