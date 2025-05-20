@@ -162,6 +162,8 @@ const FeeManagementPage = () => {
         return 'Đã đóng';
       case 'UNPAID':
         return 'Chưa đóng';
+      case 'PROCESSING':
+        return 'Đã đóng';
       case 'OVERDUE':
         return 'Quá hạn';
       default:

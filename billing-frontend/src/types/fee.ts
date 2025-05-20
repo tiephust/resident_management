@@ -6,7 +6,7 @@ export interface FeeDTO {
     amount: number;
     dueDate: string;
     paymentDate: string | null;
-    status: 'PAID' | 'UNPAID' | 'OVERDUE';
+    status: 'PAID' | 'UNPAID' | 'OVERDUE' | 'PROCESSING';
     description: string | null;
     stripePaymentIntentId: string | null;
     stripePaymentStatus: string | null;
