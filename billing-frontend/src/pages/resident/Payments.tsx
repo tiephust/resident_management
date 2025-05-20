@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -17,54 +17,61 @@ import {
   DialogActions,
   Grid,
   TextField,
+  CircularProgress,
 } from '@mui/material';
 import {
   Payment as PaymentIcon,
   Receipt as ReceiptIcon,
 } from '@mui/icons-material';
+import { managementFeeService } from '../../services/admin/ManagementFeeService';
+import { Fee } from '../../types/admin/FeeManagementType';
+import axiosInstance from '../../services/axiosInstance';
 
-interface Payment {
-  id: string;
-  type: string;
-  amount: number;
-  dueDate: string;
-  status: 'pending' | 'paid' | 'overdue';
-  description: string;
+interface UserInfo {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  role: string;
+  apartment: string;
+  avatar: string;
 }
 
 const Payments = () => {
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [selectedPayment, setSelectedPayment] = useState<Fee | null>(null);
+  const [payments, setPayments] = useState<Fee[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<UserInfo | null>(null);
+  const [processingPayment, setProcessingPayment] = useState<number | null>(null);
 
-  // Mock data
-  const payments: Payment[] = [
-    {
-      id: '1',
-      type: 'Phí quản lý',
-      amount: 500000,
-      dueDate: '2024-01-31',
-      status: 'pending',
-      description: 'Phí quản lý tháng 1/2024',
-    },
-    {
-      id: '2',
-      type: 'Phí gửi xe',
-      amount: 200000,
-      dueDate: '2024-01-31',
-      status: 'paid',
-      description: 'Phí gửi xe tháng 1/2024',
-    },
-    {
-      id: '3',
-      type: 'Tiền điện',
-      amount: 750000,
-      dueDate: '2024-01-15',
-      status: 'overdue',
-      description: 'Tiền điện tháng 12/2023',
-    },
-  ];
+  useEffect(() => {
+    loadUserAndPayments();
+  }, []);
 
-  const handlePayment = (payment: Payment) => {
+  const loadUserAndPayments = async () => {
+    try {
+      // Get current user information
+      const userResponse = await axiosInstance.get('/api/user/me');
+      const userData = userResponse.data;
+      setCurrentUser(userData);
+
+      if (userData && userData.apartment) {
+        // Extract apartment number from "Apartment X" format
+        const apartmentNumber = userData.apartment.split(' ')[1];
+        // Get fees for the user's apartment
+        const data = await managementFeeService.getFeesByApartment(parseInt(apartmentNumber));
+        setPayments(data);
+      }
+    } catch (error) {
+      console.error('Error loading user and payments:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePayment = (payment: Fee) => {
     setSelectedPayment(payment);
     setPaymentDialogOpen(true);
   };
@@ -74,20 +81,58 @@ const Payments = () => {
     setSelectedPayment(null);
   };
 
-  const handleConfirmPayment = () => {
-    // Handle payment confirmation here
-    console.log('Processing payment:', selectedPayment);
-    handleClosePaymentDialog();
+  const handleConfirmPayment = async () => {
+    if (!selectedPayment || !currentUser) return;
+
+    try {
+      setProcessingPayment(selectedPayment.id);
+      handleClosePaymentDialog();
+
+      // Create payment intent with residentId
+      const paymentIntent = await axiosInstance.post('/api/fee/payment-intent', {
+        feeId: selectedPayment.id,
+        residentId: currentUser.id
+      });
+
+      // Update the payment status to PROCESSING in the local state
+      setPayments(prevPayments => 
+        prevPayments.map(payment => 
+          payment.id === selectedPayment.id 
+            ? { ...payment, status: 'PROCESSING' }
+            : payment
+        )
+      );
+
+      // Confirm payment with the correct request format
+      await axiosInstance.post('/api/fee/confirm-payment', {
+        feeId: selectedPayment.id,
+        stripePaymentId: paymentIntent.data.stripePaymentIntentId,
+        residentId: currentUser.id
+      });
+
+      // Reload payments to update status
+      await loadUserAndPayments();
+    } catch (error) {
+      console.error('Error processing payment:', error);
+      // Reset processing state on error
+      setProcessingPayment(null);
+      // Reload payments to ensure correct state
+      await loadUserAndPayments();
+    } finally {
+      setProcessingPayment(null);
+    }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'paid':
+      case 'PAID':
         return 'success';
-      case 'pending':
+      case 'UNPAID':
         return 'warning';
-      case 'overdue':
+      case 'OVERDUE':
         return 'error';
+      case 'PROCESSING':
+        return 'warning';
       default:
         return 'default';
     }
@@ -95,21 +140,35 @@ const Payments = () => {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'paid':
+      case 'PAID':
         return 'Đã thanh toán';
-      case 'pending':
+      case 'UNPAID':
         return 'Chờ thanh toán';
-      case 'overdue':
+      case 'OVERDUE':
         return 'Quá hạn';
+      case 'PROCESSING':
+        return 'Đang xử lý';
       default:
         return status;
     }
   };
 
+  if (loading) {
+    return <Typography>Loading...</Typography>;
+  }
+
+  if (!currentUser) {
+    return <Typography>Không tìm thấy thông tin người dùng</Typography>;
+  }
+
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
         Đóng phí
+      </Typography>
+
+      <Typography variant="subtitle1" gutterBottom>
+        Căn hộ: {currentUser.apartment}
       </Typography>
 
       <TableContainer component={Paper} sx={{ mt: 3 }}>
@@ -127,7 +186,7 @@ const Payments = () => {
           <TableBody>
             {payments.map((payment) => (
               <TableRow key={payment.id}>
-                <TableCell>{payment.type}</TableCell>
+                <TableCell>{payment.feeTypeId}</TableCell>
                 <TableCell>{payment.amount.toLocaleString('vi-VN')} đ</TableCell>
                 <TableCell>{new Date(payment.dueDate).toLocaleDateString('vi-VN')}</TableCell>
                 <TableCell>
@@ -139,14 +198,18 @@ const Payments = () => {
                 </TableCell>
                 <TableCell>{payment.description}</TableCell>
                 <TableCell align="right">
-                  <Button
-                    variant="contained"
-                    startIcon={<PaymentIcon />}
-                    disabled={payment.status === 'paid'}
-                    onClick={() => handlePayment(payment)}
-                  >
-                    Thanh toán
-                  </Button>
+                  {processingPayment === payment.id ? (
+                    <CircularProgress size={24} />
+                  ) : (
+                    <Button
+                      variant="contained"
+                      startIcon={<PaymentIcon />}
+                      disabled={payment.status === 'PAID' || payment.status === 'PROCESSING'}
+                      onClick={() => handlePayment(payment)}
+                    >
+                      Thanh toán
+                    </Button>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
@@ -176,7 +239,7 @@ const Payments = () => {
                 <TextField
                   fullWidth
                   label="Loại phí"
-                  value={selectedPayment.type}
+                  value={selectedPayment.feeTypeId}
                   InputProps={{ readOnly: true }}
                 />
               </Grid>
@@ -192,7 +255,7 @@ const Payments = () => {
                 <TextField
                   fullWidth
                   label="Mô tả"
-                  value={selectedPayment.description}
+                  value={selectedPayment.description || ''}
                   InputProps={{ readOnly: true }}
                 />
               </Grid>

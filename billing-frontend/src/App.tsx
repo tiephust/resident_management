@@ -27,6 +27,7 @@ import DeviceManagement from './pages/admin/DeviceManagement';
 import Profile from './pages/user/Profile';
 import FeeNotification from "./pages/admin/FeeNotification";
 import FeedbackManagement from "./pages/admin/FeedbackManagement";
+import AbsentFormPage from "./pages/admin/AbsentFormPage";
 import ResidentDashboard from './pages/resident/Dashboard';
 import ResidentPayments from './pages/resident/Payments';
 import ResidentAbsence from './pages/resident/Absence';
@@ -87,7 +88,7 @@ const App: React.FC = () => {
                 <Route path="temporary" element={<ResidentTemporary />} />
                 <Route path="feedback" element={<ResidentFeedback />} />
                 <Route path="comments" element={<ResidentComments />} />
-                <Route path="profile" element={<ResidentProfile />} />
+                <Route path="profile" element={<Profile />} />
               </Route>
 
               {/* Admin Routes */}
@@ -101,7 +102,7 @@ const App: React.FC = () => {
                 <Route path="statistics" element={<Statistics />} />
                 <Route path="residents" element={<Residents />} />
                 <Route path="resident-management" element={<ResidentManagementPages />} />
-                <Route path="temporary-residents" element={<ResidentTemporary />} />
+                <Route path="temporary-residents" element={<AbsentFormPage />} />
                 <Route path="payments" element={<Payments />} />
                 <Route path="temporary-management" element={<TemporaryManagement />} />
                 <Route path="apartment-details" element={<ApartmentDetailsManagement />} />

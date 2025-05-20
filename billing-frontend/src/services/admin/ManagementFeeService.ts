@@ -49,5 +49,26 @@ export const managementFeeService = {
     async getFeesByResident(residentId: number): Promise<Fee[]> {
         const response = await axiosInstance.get(`/api/fee/resident/${residentId}`);
         return response.data;
+    },
+
+    // Payment related methods
+    async createPaymentIntent(request: { feeId: number }): Promise<Fee> {
+        const response = await axiosInstance.post('/api/fee/payment-intent', request);
+        return response.data;
+    },
+
+    async confirmPayment(feeId: number, stripePaymentId: string): Promise<Fee> {
+        const response = await axiosInstance.post('/api/fee/confirm-payment', null, {
+            params: {
+                feeId,
+                stripePaymentId
+            }
+        });
+        return response.data;
+    },
+
+    async processRefund(request: { feeId: number, reason: string }): Promise<Fee> {
+        const response = await axiosInstance.post('/api/fee/refund', request);
+        return response.data;
     }
 };

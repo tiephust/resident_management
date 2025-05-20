@@ -71,6 +71,7 @@ public class SecurityConfig {
                             .requestMatchers("/api/fee-type/**").hasRole("ADMIN")
                             .requestMatchers("/api/fees/**").hasAnyRole("ADMIN", "RESIDENT")
                             .requestMatchers("/api/device/**").hasAnyRole("ADMIN", "RESIDENT")
+                            .requestMatchers("/api/absent-forms/**").hasAnyRole("ADMIN", "RESIDENT")
                             .requestMatchers("/api/fees/admin/**").hasRole("ADMIN")
                             .requestMatchers("/api/user/**").hasAnyRole("RESIDENT", "ADMIN")
                             .anyRequest().authenticated();

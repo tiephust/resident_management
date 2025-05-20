@@ -49,7 +49,7 @@ export interface Fee {
     amount: number;
     dueDate: string;
     paymentDate: string | null;
-    status: 'PAID' | 'UNPAID' | 'OVERDUE';
+    status: 'PAID' | 'UNPAID' | 'OVERDUE' | 'PROCESSING';
     description: string | null;
     stripePaymentIntentId: string | null;
     stripePaymentStatus: string | null;
@@ -63,13 +63,13 @@ export interface NewFee {
     amount: number;
     dueDate: string;
     description: string | null;
-    status: 'PAID' | 'UNPAID' | 'OVERDUE';
+    status: 'PAID' | 'UNPAID' | 'OVERDUE' | 'PROCESSING';
 }
 
 export interface FeeFilter {
     apartmentId?: number;
     feeTypeId?: number;
-    status?: 'PAID' | 'UNPAID' | 'OVERDUE';
+    status?: 'PAID' | 'UNPAID' | 'OVERDUE' | 'PROCESSING';
     startDate?: string;
     endDate?: string;
 }
