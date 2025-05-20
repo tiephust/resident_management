@@ -49,7 +49,7 @@ const ResidentLayout = () => {
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/resident/dashboard' },
     { text: 'Đóng phí', icon: <PaymentIcon />, path: '/resident/payments' },
     { text: 'Khai báo tạm vắng', icon: <AbsenceIcon />, path: '/resident/absence' },
-    { text: 'Khai báo tạm trú', icon: <TemporaryResidentIcon />, path: '/resident/temporary' },
+    // { text: 'Khai báo tạm trú', icon: <TemporaryResidentIcon />, path: '/resident/temporary' },
     { text: 'Phản ánh', icon: <FeedbackIcon />, path: '/resident/feedback' },
     { text: 'Ý kiến', icon: <CommentIcon />, path: '/resident/comments' },
   ];
