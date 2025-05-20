@@ -103,12 +103,8 @@ const Payments = () => {
         )
       );
 
-      // Confirm payment with the correct request format
-      await axiosInstance.post('/api/fee/confirm-payment', {
-        feeId: selectedPayment.id,
-        stripePaymentId: paymentIntent.data.stripePaymentIntentId,
-        residentId: currentUser.id
-      });
+      // Confirm payment with query parameters
+      await axiosInstance.post(`/api/fee/confirm-payment?feeId=${selectedPayment.id}&stripePaymentId=${paymentIntent.data.stripePaymentIntentId}`);
 
       // Reload payments to update status
       await loadUserAndPayments();

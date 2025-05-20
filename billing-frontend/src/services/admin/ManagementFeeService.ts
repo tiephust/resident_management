@@ -1,5 +1,6 @@
 import axiosInstance from '../axiosInstance';
 import { Fee, NewFee, FeeFilter } from '../../types/admin/FeeManagementType';
+import { FeeDTO } from '../../types/fee';
 
 export const managementFeeService = {
     async getAllFees(): Promise<Fee[]> {
@@ -45,6 +46,19 @@ export const managementFeeService = {
         const response = await axiosInstance.get(`/api/fee/search?searchTerm=${encodeURIComponent(searchTerm)}`);
         return response.data;
     },
+
+    getFees: async (status?: string, residentId?: number): Promise<FeeDTO[]> => {
+        try {
+            const response = await axiosInstance.get('/api/fee/filter', {
+                params: { status, residentId }
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching filtered fees:', error);
+            throw error;
+        }
+    },
+
 
     async getFeesByResident(residentId: number): Promise<Fee[]> {
         const response = await axiosInstance.get(`/api/fee/resident/${residentId}`);

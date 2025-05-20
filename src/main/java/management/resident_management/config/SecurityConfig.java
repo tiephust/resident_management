@@ -69,7 +69,7 @@ public class SecurityConfig {
                             .requestMatchers("/api/auth/**").permitAll()
                             .requestMatchers("/api/admin/**").hasRole("ADMIN")
                             .requestMatchers("/api/fee-type/**").hasRole("ADMIN")
-                            .requestMatchers("/api/fees/**").hasAnyRole("ADMIN", "RESIDENT")
+                            .requestMatchers("/api/fee/**").hasAnyRole("ADMIN", "RESIDENT")
                             .requestMatchers("/api/device/**").hasAnyRole("ADMIN", "RESIDENT")
                             .requestMatchers("/api/absent-forms/**").hasAnyRole("ADMIN", "RESIDENT")
                             .requestMatchers("/api/fees/admin/**").hasRole("ADMIN")

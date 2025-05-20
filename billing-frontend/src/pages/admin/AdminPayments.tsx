@@ -19,7 +19,7 @@ import {
 } from '@mui/material';
 import { Receipt as ReceiptIcon } from '@mui/icons-material';
 import PageTemplate from '../../components/PageTemplate';
-import { FeeService } from '../../services/admin/FeeService';
+import { managementFeeService } from '../../services/admin/ManagementFeeService';
 import { FeeDTO } from '../../types/fee';
 
 const AdminPayments: React.FC = () => {
@@ -34,7 +34,7 @@ const AdminPayments: React.FC = () => {
     const fetchPayments = async () => {
         try {
             const residentId = residentFilter ? Number(residentFilter) : undefined;
-            const data = await FeeService.getFees(statusFilter, residentId);
+            const data = await managementFeeService.getFees(statusFilter, residentId);
             setPayments(data);
         } catch (error) {
             console.error('Error fetching payments:', error);
@@ -43,7 +43,7 @@ const AdminPayments: React.FC = () => {
 
     const handleRefund = async (feeId: number, paymentIntentId: string) => {
         try {
-            await FeeService.processRefund({ feeId: feeId.toString(), paymentIntentId });
+            await managementFeeService.processRefund({ feeId, paymentIntentId });
             fetchPayments();
         } catch (error) {
             console.error('Error processing refund:', error);
