@@ -24,7 +24,7 @@ import TemporaryManagement from './pages/admin/TemporaryManagement';
 import ApartmentDetailsManagement from './pages/admin/ApartmentDetailsManagement';
 import FeeManagementPage from './pages/admin/FeeManagementPage';
 import DeviceManagement from './pages/admin/DeviceManagement';
-import Profile from './pages/admin/Profile';
+import Profile from './pages/user/Profile';
 import FeeNotification from "./pages/admin/FeeNotification";
 import FeedbackManagement from "./pages/admin/FeedbackManagement";
 import ResidentDashboard from './pages/resident/Dashboard';

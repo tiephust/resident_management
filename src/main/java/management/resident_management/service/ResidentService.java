@@ -29,7 +29,9 @@ public class ResidentService {
     @PostConstruct
     @Transactional
     public void init() {
+        // Only initialize if no residents exist
         if (residentRepository.count() == 0) {
+            // Create sample residents
             for (int i = 0; i < 10; i++) {
                 Resident resident = Resident.builder()
                         .email("resident" + (i + 1) + "@example.com")
@@ -49,6 +51,8 @@ public class ResidentService {
                         .leaseEndDate(LocalDate.now().plusMonths(6))
                         .status("ACTIVE")
                         .build();
+
+                // Link resident to an apartment (cycling through first 5 apartments)
                 Apartment apartment = apartmentRepository.findById((long) ((i % 5) + 1)).orElse(null);
                 resident.setApartment(apartment);
                 resident.setCreatedAt(LocalDateTime.now());

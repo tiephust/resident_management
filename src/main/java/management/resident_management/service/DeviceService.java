@@ -25,10 +25,13 @@ public class DeviceService {
     @PostConstruct
     @Transactional
     public void init() {
+        // Only initialize if no devices exist
         if (deviceRepository.count() == 0) {
+            // Create sample devices for each apartment
             for (int i = 0; i < 10; i++) {
                 Device device = new Device();
                 device.setName("Device " + (i + 1));
+                // Link device to an apartment (cycling through first 5 apartments)
                 Apartment apartment = apartmentRepository.findById((long) ((i % 5) + 1)).orElse(null);
                 device.setApartment(apartment);
                 device.setType(i % 2 == 0 ? "SENSOR" : "ACTUATOR");

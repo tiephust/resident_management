@@ -23,10 +23,14 @@ public class FeeTypeService {
     @PostConstruct
     @Transactional
     public void init() {
+        // Only initialize if no fee types exist
         if (feeTypeRepository.count() == 0) {
+            // Define sample categories and units
             String[] categories = {"Utilities", "Maintenance", "Service"};
             String[] units = {"kWh", "m³", "Flat"};
             BillingCycle[] cycles = {BillingCycle.MONTHLY, BillingCycle.QUARTERLY, BillingCycle.YEARLY};
+
+            // Create sample fee types
             for (int i = 0; i < 5; i++) {
                 FeeType feeType = new FeeType();
                 feeType.setName("Fee Type " + (i + 1));

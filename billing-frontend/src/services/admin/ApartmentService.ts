@@ -1,5 +1,5 @@
 import axiosInstance from '../axiosInstance';
-import { ApartmentDTO, NewApartmentDTO } from '../types/admin/ApartmentServiceType';
+import { ApartmentDTO, NewApartmentDTO } from '../../types/admin/ApartmentServiceType';
 
 const API_URL = 'http://localhost:8080/api/apartment';
 

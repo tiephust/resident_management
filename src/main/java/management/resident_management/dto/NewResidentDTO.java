@@ -48,6 +48,6 @@ public class NewResidentDTO {
 
     private LocalDate leaseEndDate;
 
-    @NotBlank(message = "Status is required")
+//    @NotBlank(message = "Status is required")
     private String status;
 }

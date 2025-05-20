@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import AddUserDialog from './common/AddUserDialog';
 import { Resident, NewResident } from '../../types/admin/ResidentManagementType';
-import { apartmentService } from '../../services/admin/apartmentService';
+import { apartmentService } from '../../services/admin/ApartmentService';
 
 const roleConfig: Record<string, { label: string; color: 'success' | 'warning' | 'info' | 'error' | 'default' }> = {
     RESIDENT: { label: 'Cư dân', color: 'success' },

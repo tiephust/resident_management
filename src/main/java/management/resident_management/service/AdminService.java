@@ -24,8 +24,9 @@ public class AdminService {
     @PostConstruct
     @Transactional
     public void init() {
+        // Only initialize if no admins exist
         if (adminRepository.count() == 0) {
-            // Create super admin
+            // Create super admin with default credentials
             Admin superAdmin = new Admin();
             superAdmin.setName("Super Admin");
             superAdmin.setEmail("superadmin@example.com");
@@ -37,7 +38,7 @@ public class AdminService {
             superAdmin.setUpdatedAt(LocalDateTime.now());
             adminRepository.save(superAdmin);
 
-            // Create other admins
+            // Create department admins
             String[] departments = {"Management", "Finance", "Operations"};
             for (int i = 0; i < departments.length; i++) {
                 Admin admin = new Admin();

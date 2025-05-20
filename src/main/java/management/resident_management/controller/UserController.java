@@ -4,6 +4,8 @@ import management.resident_management.dto.PasswordFormDto;
 import management.resident_management.dto.UserInfoDto;
 import management.resident_management.dto.UserUpdateDto;
 import management.resident_management.entity.User;
+import management.resident_management.repository.ResidentRepository;
+import management.resident_management.service.ResidentService;
 import management.resident_management.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
+    private final ResidentRepository residentRepository;
 
     @GetMapping("/me")
     public ResponseEntity<UserInfoDto> getCurrentUser() {
@@ -26,7 +29,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         String email = authentication.getName();
-        UserInfoDto userInfo = UserInfoDto.toUserInforDto(userService.getUserByEmail(email));
+        UserInfoDto userInfo = UserInfoDto.toUserInfoDto(userService.getUserByEmail(email), residentRepository);
         return ResponseEntity.ok(userInfo);
     }
 

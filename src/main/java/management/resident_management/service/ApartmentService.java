@@ -22,7 +22,9 @@ public class ApartmentService {
     @PostConstruct
     @Transactional
     public void init() {
+        // Only initialize if no apartments exist
         if (apartmentRepository.count() == 0) {
+            // Create sample apartments
             for (int i = 0; i < 10; i++) {
                 Apartment apartment = new Apartment();
                 apartment.setName("Apartment " + (i + 1));
