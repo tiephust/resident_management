@@ -2,6 +2,7 @@ export interface FeeDTO {
     id: number;
     apartmentId: number;
     feeTypeId: number;
+    residentId: number;
     amount: number;
     dueDate: string;
     paymentDate: string | null;
@@ -20,6 +21,7 @@ export interface NewFeeDTO {
     dueDate: string;
     description: string | null;
     status: 'PAID' | 'UNPAID' | 'OVERDUE';
+    residentId: number;
 }
 
 export interface PaymentRequestDTO {

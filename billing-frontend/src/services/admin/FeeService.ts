@@ -1,7 +1,12 @@
 import axiosInstance from '../axiosInstance';
-import { FeeDTO, NewFeeDTO, PaymentRequestDTO, RefundRequestDTO } from '../../types/fee';
+import {
+    FeeDTO,
+    NewFeeDTO,
+    PaymentRequestDTO,
+    RefundRequestDTO
+} from '../../types/fee';
 
-export const managementFeeService = {
+export const FeeService = {
     getAllFees: async (): Promise<FeeDTO[]> => {
         try {
             const response = await axiosInstance.get('/api/fee');
@@ -73,6 +78,18 @@ export const managementFeeService = {
         }
     },
 
+    getFees: async (status?: string, residentId?: number): Promise<FeeDTO[]> => {
+        try {
+            const response = await axiosInstance.get('/api/fee/filter', {
+                params: { status, residentId }
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching filtered fees:', error);
+            throw error;
+        }
+    },
+
     createPaymentIntent: async (paymentData: PaymentRequestDTO): Promise<{ clientSecret: string }> => {
         try {
             const response = await axiosInstance.post('/api/fee/payment-intent', paymentData);
@@ -83,10 +100,10 @@ export const managementFeeService = {
         }
     },
 
-    confirmPayment: async (feeId: number, stripePaymentId: string): Promise<FeeDTO> => {
+    confirmPayment: async (feeId: number, stripePaymentId: string, residentId: number): Promise<FeeDTO> => {
         try {
             const response = await axiosInstance.post('/api/fee/confirm-payment', null, {
-                params: { feeId, stripePaymentId }
+                params: { feeId, stripePaymentId, residentId }
             });
             return response.data;
         } catch (error) {
@@ -105,3 +122,41 @@ export const managementFeeService = {
         }
     }
 };
+
+export interface FeeDTO {
+    id: number;
+    apartmentId: number;
+    feeTypeId: number;
+    residentId: number;
+    amount: number;
+    dueDate: string;
+    paymentDate: string | null;
+    status: 'PAID' | 'UNPAID' | 'OVERDUE';
+    description: string | null;
+    stripePaymentIntentId: string | null;
+    stripePaymentStatus: string | null;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface NewFeeDTO {
+    apartmentId: number;
+    feeTypeId: number;
+    amount: number;
+    dueDate: string;
+    description: string | null;
+    status: 'PAID' | 'UNPAID' | 'OVERDUE';
+    residentId: number;
+}
+
+export interface PaymentRequestDTO {
+    feeId: string;
+    residentId: string;
+    amount: number;
+    paymentMethodId: string;
+}
+
+export interface RefundRequestDTO {
+    feeId: string;
+    paymentIntentId: string;
+}

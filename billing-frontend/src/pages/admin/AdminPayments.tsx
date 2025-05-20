@@ -19,7 +19,7 @@ import {
 } from '@mui/material';
 import { Receipt as ReceiptIcon } from '@mui/icons-material';
 import PageTemplate from '../../components/PageTemplate';
-import { feeService } from '../../services/admin/FeeService';
+import { FeeService } from '../../services/admin/FeeService';
 import { FeeDTO } from '../../types/fee';
 
 const AdminPayments: React.FC = () => {
@@ -33,16 +33,17 @@ const AdminPayments: React.FC = () => {
 
     const fetchPayments = async () => {
         try {
-            const data = await feeService.getPayments(statusFilter, residentFilter);
+            const residentId = residentFilter ? Number(residentFilter) : undefined;
+            const data = await FeeService.getFees(statusFilter, residentId);
             setPayments(data);
         } catch (error) {
             console.error('Error fetching payments:', error);
         }
     };
 
-    const handleRefund = async (feeId: string, paymentIntentId: string) => {
+    const handleRefund = async (feeId: number, paymentIntentId: string) => {
         try {
-            await feeService.processRefund(Number(feeId), paymentIntentId);
+            await FeeService.processRefund({ feeId: feeId.toString(), paymentIntentId });
             fetchPayments();
         } catch (error) {
             console.error('Error processing refund:', error);
@@ -89,9 +90,10 @@ const AdminPayments: React.FC = () => {
                         </Select>
                     </FormControl>
                     <TextField
-                        label="Tìm kiếm cư dân"
+                        label="Tìm kiếm cư dân (ID)"
                         value={residentFilter}
                         onChange={(e) => setResidentFilter(e.target.value)}
+                        type="number"
                         sx={{ minWidth: 200 }}
                     />
                 </Box>
@@ -112,8 +114,8 @@ const AdminPayments: React.FC = () => {
                         <TableBody>
                             {payments.map((payment) => (
                                 <TableRow key={payment.id}>
-                                    <TableCell>{payment.residentName}</TableCell>
-                                    <TableCell>{payment.feeTypeName}</TableCell>
+                                    <TableCell>{payment.residentId}</TableCell>
+                                    <TableCell>{payment.feeTypeId}</TableCell>
                                     <TableCell>{payment.amount.toLocaleString('vi-VN')} đ</TableCell>
                                     <TableCell>{new Date(payment.dueDate).toLocaleDateString('vi-VN')}</TableCell>
                                     <TableCell>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -13,6 +13,10 @@ import {
     MenuItem,
 } from '@mui/material';
 import { Fee, NewFee } from '../../types/admin/FeeManagementType';
+import { FeeType } from '../../types/admin/FeeTypeManagementType';
+import { managementFeeTypeService } from '../../services/admin/ManagementFeeTypeService';
+import { managementApartmentService } from '../../services/admin/ManageApartmentService';
+import { ApartmentDTO } from '../../types/admin/ApartmentServiceType';
 
 interface FeeDialogProps {
     open: boolean;
@@ -29,6 +33,31 @@ const FeeDialog: React.FC<FeeDialogProps> = ({
     onClose,
     onSave,
 }) => {
+    const [feeTypes, setFeeTypes] = useState<FeeType[]>([]);
+    const [apartments, setApartments] = useState<ApartmentDTO[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                const [feeTypesData, apartmentsData] = await Promise.all([
+                    managementFeeTypeService.getAllFeeTypes(),
+                    managementApartmentService.getAllApartments()
+                ]);
+                setFeeTypes(feeTypesData);
+                setApartments(apartmentsData);
+            } catch (error) {
+                console.error('Error loading data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (open) {
+            loadData();
+        }
+    }, [open]);
+
     const statusOptions = [
         { value: 'PAID', label: 'Đã đóng' },
         { value: 'UNPAID', label: 'Chưa đóng' },
@@ -56,6 +85,28 @@ const FeeDialog: React.FC<FeeDialogProps> = ({
     // Kiểm tra xem fee có id hay không (tức là FeeDTO, không phải NewFeeDTO)
     const hasId = fee && 'id' in fee;
 
+    const handleFeeTypeChange = (feeTypeId: number) => {
+        if (fee) {
+            const selectedFeeType = feeTypes.find(ft => ft.id === feeTypeId);
+            if (selectedFeeType) {
+                setFee({
+                    ...fee,
+                    feeTypeId: selectedFeeType.id,
+                    amount: selectedFeeType.pricePerUnit
+                });
+            }
+        }
+    };
+
+    const handleApartmentChange = (apartmentId: number) => {
+        if (fee) {
+            setFee({
+                ...fee,
+                apartmentId: apartmentId
+            });
+        }
+    };
+
     return (
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
             <DialogTitle>
@@ -63,16 +114,36 @@ const FeeDialog: React.FC<FeeDialogProps> = ({
             </DialogTitle>
             <DialogContent>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
-                    <TextField
-                        label="Loại phí"
-                        fullWidth
-                        type="number"
-                        value={fee?.feeTypeId || ''}
-                        onChange={(e) =>
-                            fee && setFee({ ...fee, feeTypeId: Number(e.target.value) })
-                        }
-                        required
-                    />
+                    <FormControl fullWidth>
+                        <InputLabel>Căn hộ</InputLabel>
+                        <Select
+                            value={fee?.apartmentId || ''}
+                            label="Căn hộ"
+                            onChange={(e) => handleApartmentChange(Number(e.target.value))}
+                            required
+                        >
+                            {apartments.map((apartment) => (
+                                <MenuItem key={apartment.id} value={apartment.id}>
+                                    {apartment.name}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                    <FormControl fullWidth>
+                        <InputLabel>Loại phí</InputLabel>
+                        <Select
+                            value={fee?.feeTypeId || ''}
+                            label="Loại phí"
+                            onChange={(e) => handleFeeTypeChange(Number(e.target.value))}
+                            required
+                        >
+                            {feeTypes.map((feeType) => (
+                                <MenuItem key={feeType.id} value={feeType.id}>
+                                    {feeType.name} - {feeType.category} ({feeType.unit})
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
                     <TextField
                         label="Số tiền"
                         fullWidth
